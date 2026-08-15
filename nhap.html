@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bảng Dữ Liệu Sheet Thiên Hà - Cosmos Dashboard</title>
-    <meta name="description" content="Trình quản lý và xem trước toàn bộ dữ liệu bảng tính Google Sheet thien_ha.">
+    <meta name="description" content="Trình quản lý, tải ảnh FreeImage.host và cập nhật dữ liệu bảng tính Google Sheet thien_ha.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -144,6 +144,16 @@
             background: rgba(255, 255, 255, 0.15);
             border-color: rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #9d4edd, #00b4d8);
+            color: #ffffff;
+        }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(157, 78, 221, 0.5);
         }
 
         /* Stats & Search Toolbar */
@@ -438,7 +448,7 @@
             border: 1px solid var(--panel-border);
             border-radius: var(--radius-lg);
             width: 100%;
-            max-width: 650px;
+            max-width: 680px;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px var(--primary-glow);
@@ -569,6 +579,97 @@
             color: #ffffff;
         }
 
+        /* FreeImage.host Upload Box */
+        .upload-section {
+            background: rgba(255, 42, 133, 0.04);
+            border: 1px dashed rgba(255, 42, 133, 0.4);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .upload-actions-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .btn-upload-trigger {
+            background: linear-gradient(135deg, rgba(255, 42, 133, 0.2), rgba(157, 78, 221, 0.3));
+            border: 1px solid rgba(255, 42, 133, 0.5);
+            color: #ffffff;
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-upload-trigger:hover {
+            background: rgba(255, 42, 133, 0.4);
+            border-color: var(--primary);
+        }
+
+        .upload-status-text {
+            font-size: 0.8rem;
+            color: #90e0ef;
+        }
+
+        .upload-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 20px;
+        }
+
+        .upload-preview-item {
+            position: relative;
+            width: 52px;
+            height: 52px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        }
+
+        .upload-preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .upload-preview-remove {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(255, 42, 133, 0.9);
+            color: #ffffff;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .upload-preview-remove:hover {
+            background: #ff0055;
+            transform: scale(1.15);
+        }
+
         .modal-footer {
             display: flex;
             justify-content: flex-end;
@@ -669,7 +770,7 @@
                 </div>
                 <div class="brand-text">
                     <h1>Dữ Liệu Sheet Thiên Hà</h1>
-                    <p>Tab <code>thien_ha</code> &bull; Google Sheet ID: <code>1eJkfAcu32pMIvI1n2tD2vGGdDpmNBDHPuKE8RgkPNNk</code></p>
+                    <p>Tab <code>thien_ha</code> &bull; Tích hợp tải ảnh trực tiếp <code>FreeImage.host</code></p>
                 </div>
             </div>
 
@@ -736,7 +837,7 @@
         </div>
     </div>
 
-    <!-- Add New Row Modal Popup -->
+    <!-- 1. Add New Row Modal Popup -->
     <div id="add-modal" class="modal">
         <div class="modal-backdrop"></div>
         <div class="modal-card">
@@ -757,7 +858,21 @@
 
                 <div class="form-group">
                     <label for="new-anh"><i class="fa-solid fa-images"></i> Link Ảnh (Cột B)</label>
-                    <textarea id="new-anh" class="form-control" rows="3" placeholder="Dán link ảnh trực tiếp hoặc Google Drive (nhiều ảnh ngăn cách bằng dấu |)&#10;Ví dụ: https://link1.jpg | https://link2.jpg"></textarea>
+                    
+                    <!-- FreeImage Upload Box -->
+                    <div class="upload-section">
+                        <div class="upload-actions-bar">
+                            <label for="new-image-file-input" class="btn-upload-trigger">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <span>Tải ảnh từ máy tính (FreeImage.host)</span>
+                            </label>
+                            <input type="file" id="new-image-file-input" multiple accept="image/*" style="display: none;">
+                            <span id="new-upload-status" class="upload-status-text"></span>
+                        </div>
+                        <div id="new-preview-strip" class="upload-preview-container"></div>
+                    </div>
+
+                    <textarea id="new-anh" class="form-control" rows="2" placeholder="Hoặc dán trực tiếp link ảnh (nhiều ảnh ngăn cách bằng dấu |)"></textarea>
                 </div>
 
                 <div class="form-group">
@@ -817,6 +932,102 @@
         </div>
     </div>
 
+    <!-- 2. Edit Row Modal Popup -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <i class="fa-solid fa-pen-to-square modal-icon" style="color: #c77dff;"></i>
+                    <h2>Chỉnh Sửa Dữ Liệu Dòng</h2>
+                </div>
+                <button id="close-edit-modal" class="btn-close-modal" type="button"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form id="edit-row-form" class="modal-body">
+                <input type="hidden" id="edit-row-number">
+
+                <div class="form-group">
+                    <label for="edit-id"><i class="fa-solid fa-key"></i> ID Người Nhận (Cột A) <span class="req">*</span></label>
+                    <input type="text" id="edit-id" class="form-control" required autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-anh"><i class="fa-solid fa-images"></i> Link Ảnh (Cột B)</label>
+                    
+                    <!-- FreeImage Upload Box -->
+                    <div class="upload-section">
+                        <div class="upload-actions-bar">
+                            <label for="edit-image-file-input" class="btn-upload-trigger">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <span>Tải thêm ảnh mới (FreeImage.host)</span>
+                            </label>
+                            <input type="file" id="edit-image-file-input" multiple accept="image/*" style="display: none;">
+                            <span id="edit-upload-status" class="upload-status-text"></span>
+                        </div>
+                        <div id="edit-preview-strip" class="upload-preview-container"></div>
+                    </div>
+
+                    <textarea id="edit-anh" class="form-control" rows="2" placeholder="Link ảnh ngăn cách bằng dấu |"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-text"><i class="fa-solid fa-comment-dots"></i> Câu Chúc / Lời Nhắn (Cột C)</label>
+                    <textarea id="edit-text" class="form-control" rows="2" placeholder="Lời chúc ngăn cách bằng dấu |"></textarea>
+                </div>
+
+                <div class="form-row-grid">
+                    <div class="form-group">
+                        <label for="edit-shape"><i class="fa-solid fa-cube"></i> Hình Dạng 3D (Cột D)</label>
+                        <select id="edit-shape" class="form-control">
+                            <option value="sphere">Quả Cầu 3D (sphere)</option>
+                            <option value="heart">Trái Tim 3D (heart)</option>
+                            <option value="spiral">Ngân Hà 3D (spiral)</option>
+                            <option value="saturn">Thổ Tinh 3D (saturn)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-color"><i class="fa-solid fa-palette"></i> Màu Sắc (Cột E)</label>
+                        <select id="edit-color" class="form-control">
+                            <option value="pink">Hồng Ngọt Ngào (pink)</option>
+                            <option value="gold">Vàng Hoàng Kim (gold)</option>
+                            <option value="purple">Tím Huyền Bí (purple)</option>
+                            <option value="cyan">Xanh Thiên Thanh (cyan)</option>
+                            <option value="white">Trắng Tinh Khôi (white)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row-grid">
+                    <div class="form-group">
+                        <label for="edit-belt"><i class="fa-solid fa-circle-notch"></i> Vành Đai Thiên Thạch (Cột F)</label>
+                        <select id="edit-belt" class="form-control">
+                            <option value="1">1 Vành đai ngang (1)</option>
+                            <option value="2">2 Vành đai chéo (2)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-dir"><i class="fa-solid fa-rotate"></i> Chiều Quay (Cột G)</label>
+                        <select id="edit-dir" class="form-control">
+                            <option value="reverse">Ngược chiều ảnh (reverse)</option>
+                            <option value="same">Cùng chiều ảnh (same)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" id="cancel-edit-btn" class="btn btn-secondary">Hủy bỏ</button>
+                    <button type="submit" id="submit-edit-btn" class="btn btn-primary" style="background: linear-gradient(135deg, #9d4edd, #ff2a85);">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Cập Nhật Vào Google Sheet</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Image Preview Modal -->
     <div id="preview-modal" class="preview-modal">
         <div class="preview-content">
@@ -829,6 +1040,7 @@
 
     <script>
         const SHEET_ID = '1eJkfAcu32pMIvI1n2tD2vGGdDpmNBDHPuKE8RgkPNNk';
+        const FREEIMAGE_API_KEY = '6d207e02198a847aa98d0a2a901485a5';
         let allRowsData = [];
 
         // Google Cloud Service Account API Configuration
@@ -960,6 +1172,85 @@
             setTimeout(() => toast.remove(), 2800);
         }
 
+        // Upload Single Image File to FreeImage.host API
+        async function uploadFileToFreeImage(file) {
+            const formData = new FormData();
+            formData.append('key', FREEIMAGE_API_KEY);
+            formData.append('action', 'upload');
+            formData.append('source', file);
+            formData.append('format', 'json');
+
+            const res = await fetch('https://freeimage.host/api/1/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+            if (data && data.status_code === 200 && data.image && data.image.url) {
+                return data.image.url;
+            } else {
+                throw new Error(data?.error?.message || "Lỗi tải ảnh lên FreeImage.host");
+            }
+        }
+
+        // Handle Multiple File Upload for a Form
+        async function handleImageUploadFlow(fileInput, textareaEl, previewStripEl, statusEl) {
+            const files = Array.from(fileInput.files);
+            if (files.length === 0) return;
+
+            statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang tải 0/${files.length} ảnh...`;
+            fileInput.disabled = true;
+
+            let uploadedUrls = [];
+            let currentUrls = textareaEl.value ? textareaEl.value.split('|').map(s => s.trim()).filter(Boolean) : [];
+
+            for (let i = 0; i < files.length; i++) {
+                statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang tải ảnh ${i + 1}/${files.length}...`;
+                try {
+                    const url = await uploadFileToFreeImage(files[i]);
+                    currentUrls.push(url);
+                    uploadedUrls.push(url);
+                } catch (err) {
+                    console.error(err);
+                    showToast(`Ảnh "${files[i].name}" lỗi: ${err.message}`, true);
+                }
+            }
+
+            textareaEl.value = currentUrls.join(' | ');
+            renderThumbnailStrip(textareaEl, previewStripEl);
+
+            fileInput.disabled = false;
+            fileInput.value = '';
+            statusEl.innerHTML = `<i class="fa-solid fa-check" style="color: #2ed573;"></i> Đã tải xong ${uploadedUrls.length} ảnh!`;
+            setTimeout(() => { statusEl.innerText = ''; }, 3500);
+        }
+
+        // Render interactive thumbnail strip for textarea
+        function renderThumbnailStrip(textareaEl, containerEl) {
+            containerEl.innerHTML = '';
+            const urls = textareaEl.value ? textareaEl.value.split('|').map(s => s.trim()).filter(Boolean) : [];
+
+            urls.forEach((url, idx) => {
+                const directUrl = formatImageUrl(url);
+                const item = document.createElement('div');
+                item.className = 'upload-preview-item';
+                item.innerHTML = `
+                    <img src="${directUrl}" alt="Thumb" onclick="openPreview('${directUrl}')" title="Click xem ảnh to">
+                    <button type="button" class="upload-preview-remove" title="Xóa ảnh này"><i class="fa-solid fa-xmark"></i></button>
+                `;
+
+                // Remove image on click
+                item.querySelector('.upload-preview-remove').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    urls.splice(idx, 1);
+                    textareaEl.value = urls.join(' | ');
+                    renderThumbnailStrip(textareaEl, containerEl);
+                });
+
+                containerEl.appendChild(item);
+            });
+        }
+
         // Fetch via Google Sheets API v4 (Service Account)
         async function fetchServiceAccountRows() {
             const token = await getGoogleAccessToken();
@@ -1001,6 +1292,7 @@
 
                 if (cellA || cellB || cellC) {
                     parsedRows.push({
+                        rowNumber: idx + 1, // Actual 1-based Google Sheet row index
                         id: cellA,
                         anh: cellB,
                         cau_text: cellC,
@@ -1054,6 +1346,7 @@
 
                 if (cellA || cellB || cellC) {
                     parsedRows.push({
+                        rowNumber: idx + 1,
                         id: cellA ? String(cellA).trim() : '',
                         anh: cellB ? String(cellB).trim() : '',
                         cau_text: cellC ? String(cellC).trim() : '',
@@ -1139,6 +1432,52 @@
             return await response.json();
         }
 
+        // Update Existing Row in Google Sheet via Service Account API
+        async function updateRowInGoogleSheet(rowNumber, rowData) {
+            const token = await getGoogleAccessToken();
+            if (!token) throw new Error("Không thể lấy mã xác thực Google API");
+
+            const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets.properties.title`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!metaRes.ok) throw new Error("Không thể đọc thông tin Sheet");
+
+            const metaData = await metaRes.json();
+            let targetSheetTitle = metaData.sheets[0].properties.title;
+            const thienHaSheet = metaData.sheets.find(s => s.properties.title.toLowerCase() === 'thien_ha');
+            if (thienHaSheet) targetSheetTitle = thienHaSheet.properties.title;
+
+            const updateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/'${encodeURIComponent(targetSheetTitle)}'!A${rowNumber}:G${rowNumber}?valueInputOption=USER_ENTERED`;
+
+            const response = await fetch(updateUrl, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    values: [
+                        [
+                            rowData.id,
+                            rowData.anh,
+                            rowData.cau_text,
+                            rowData.hinh_dang,
+                            rowData.mau_sac,
+                            rowData.vanh_dai,
+                            rowData.chieu_quay
+                        ]
+                    ]
+                })
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error("Lỗi khi cập nhật Sheet: " + errText);
+            }
+
+            return await response.json();
+        }
+
         // Render Table Rows
         function renderTable(data) {
             const loader = document.getElementById('loader-state');
@@ -1166,7 +1505,7 @@
                 white: '#ffffff'
             };
 
-            data.forEach(item => {
+            data.forEach((item, idx) => {
                 const anhList = item.anh ? item.anh.split('|').map(s => s.trim()).filter(Boolean) : [];
                 const textList = item.cau_text ? item.cau_text.split('|').map(s => s.trim()).filter(Boolean) : [];
 
@@ -1226,6 +1565,10 @@
                                     <i class="fa-solid fa-up-right-from-square"></i>
                                     <span>Xem 3D</span>
                                 </a>
+                                <button class="btn btn-sm btn-edit" onclick="openEditModal(${idx})" title="Sửa thông tin dòng này">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                    <span>Sửa</span>
+                                </button>
                                 <button class="btn btn-sm btn-copy" onclick="copyGalaxyLink('${item.id}')" title="Sao chép liên kết chia sẻ">
                                     <i class="fa-solid fa-copy"></i>
                                 </button>
@@ -1287,19 +1630,26 @@
             renderTable(filtered);
         });
 
-        // Add Modal Event Listeners
+        // ----------------------------------------------------
+        // ADD NEW MODAL & FREEIMAGE.HOST UPLOAD WIRING
+        // ----------------------------------------------------
         const addModal = document.getElementById('add-modal');
         const addNewBtn = document.getElementById('add-new-btn');
         const closeAddModal = document.getElementById('close-add-modal');
         const cancelAddBtn = document.getElementById('cancel-add-btn');
         const addRowForm = document.getElementById('add-row-form');
         const submitAddBtn = document.getElementById('submit-add-btn');
+        const newFileInput = document.getElementById('new-image-file-input');
+        const newAnhTextarea = document.getElementById('new-anh');
+        const newPreviewStrip = document.getElementById('new-preview-strip');
+        const newUploadStatus = document.getElementById('new-upload-status');
 
         if (addNewBtn && addModal) {
             addNewBtn.addEventListener('click', () => {
                 addModal.classList.add('open');
                 const idInput = document.getElementById('new-id');
                 if (idInput) idInput.focus();
+                renderThumbnailStrip(newAnhTextarea, newPreviewStrip);
             });
 
             const hideAddModal = () => {
@@ -1315,13 +1665,27 @@
                 }
             });
 
+            // Handle FreeImage File Upload on Add
+            if (newFileInput) {
+                newFileInput.addEventListener('change', () => {
+                    handleImageUploadFlow(newFileInput, newAnhTextarea, newPreviewStrip, newUploadStatus);
+                });
+            }
+
+            // Sync thumbnail preview on manual textarea typing
+            if (newAnhTextarea) {
+                newAnhTextarea.addEventListener('input', () => {
+                    renderThumbnailStrip(newAnhTextarea, newPreviewStrip);
+                });
+            }
+
             // Form Submit: Append to Google Sheet
             if (addRowForm) {
                 addRowForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
 
                     const newId = document.getElementById('new-id').value.trim();
-                    const newAnh = document.getElementById('new-anh').value.trim();
+                    const newAnh = newAnhTextarea.value.trim();
                     const newText = document.getElementById('new-text').value.trim();
                     const newShape = document.getElementById('new-shape').value;
                     const newColor = document.getElementById('new-color').value;
@@ -1349,6 +1713,7 @@
 
                         showToast(`Đã thêm thành công ID "${newId}" vào Google Sheet! 💖`);
                         addRowForm.reset();
+                        newPreviewStrip.innerHTML = '';
                         hideAddModal();
                         await fetchSheetData();
                     } catch (err) {
@@ -1357,6 +1722,111 @@
                     } finally {
                         submitAddBtn.disabled = false;
                         submitAddBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> <span>Lưu Vào Google Sheet</span>';
+                    }
+                });
+            }
+        }
+
+        // ----------------------------------------------------
+        // EDIT ROW MODAL & FREEIMAGE.HOST UPLOAD WIRING
+        // ----------------------------------------------------
+        const editModal = document.getElementById('edit-modal');
+        const closeEditModal = document.getElementById('close-edit-modal');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const editRowForm = document.getElementById('edit-row-form');
+        const submitEditBtn = document.getElementById('submit-edit-btn');
+        const editFileInput = document.getElementById('edit-image-file-input');
+        const editAnhTextarea = document.getElementById('edit-anh');
+        const editPreviewStrip = document.getElementById('edit-preview-strip');
+        const editUploadStatus = document.getElementById('edit-upload-status');
+
+        function openEditModal(index) {
+            const item = allRowsData[index];
+            if (!item) return;
+
+            document.getElementById('edit-row-number').value = item.rowNumber;
+            document.getElementById('edit-id').value = item.id;
+            editAnhTextarea.value = item.anh;
+            document.getElementById('edit-text').value = item.cau_text;
+            document.getElementById('edit-shape').value = item.hinh_dang.toLowerCase();
+            document.getElementById('edit-color').value = item.mau_sac.toLowerCase();
+            document.getElementById('edit-belt').value = item.vanh_dai;
+            document.getElementById('edit-dir').value = item.chieu_quay.toLowerCase();
+
+            renderThumbnailStrip(editAnhTextarea, editPreviewStrip);
+            editModal.classList.add('open');
+        }
+
+        if (editModal) {
+            const hideEditModal = () => {
+                editModal.classList.remove('open');
+            };
+
+            if (closeEditModal) closeEditModal.addEventListener('click', hideEditModal);
+            if (cancelEditBtn) cancelEditBtn.addEventListener('click', hideEditModal);
+
+            editModal.addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal-backdrop') || e.target === editModal) {
+                    hideEditModal();
+                }
+            });
+
+            // Handle FreeImage File Upload on Edit
+            if (editFileInput) {
+                editFileInput.addEventListener('change', () => {
+                    handleImageUploadFlow(editFileInput, editAnhTextarea, editPreviewStrip, editUploadStatus);
+                });
+            }
+
+            // Sync thumbnail preview on edit manual typing
+            if (editAnhTextarea) {
+                editAnhTextarea.addEventListener('input', () => {
+                    renderThumbnailStrip(editAnhTextarea, editPreviewStrip);
+                });
+            }
+
+            // Form Submit: Update Google Sheet Row
+            if (editRowForm) {
+                editRowForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const rowNum = parseInt(document.getElementById('edit-row-number').value, 10);
+                    const editId = document.getElementById('edit-id').value.trim();
+                    const editAnh = editAnhTextarea.value.trim();
+                    const editText = document.getElementById('edit-text').value.trim();
+                    const editShape = document.getElementById('edit-shape').value;
+                    const editColor = document.getElementById('edit-color').value;
+                    const editBelt = document.getElementById('edit-belt').value;
+                    const editDir = document.getElementById('edit-dir').value;
+
+                    if (!rowNum || !editId) {
+                        showToast("Vui lòng nhập đầy đủ thông tin ID!", true);
+                        return;
+                    }
+
+                    submitEditBtn.disabled = true;
+                    submitEditBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang cập nhật Sheet...</span>';
+
+                    try {
+                        await updateRowInGoogleSheet(rowNum, {
+                            id: editId,
+                            anh: editAnh,
+                            cau_text: editText,
+                            hinh_dang: editShape,
+                            mau_sac: editColor,
+                            vanh_dai: editBelt,
+                            chieu_quay: editDir
+                        });
+
+                        showToast(`Đã cập nhật thành công ID "${editId}" vào Google Sheet! 💖`);
+                        hideEditModal();
+                        await fetchSheetData();
+                    } catch (err) {
+                        console.error(err);
+                        showToast("Lỗi khi cập nhật: " + (err.message || "Kiểm tra lại quyền"), true);
+                    } finally {
+                        submitEditBtn.disabled = false;
+                        submitEditBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> <span>Cập Nhật Vào Google Sheet</span>';
                     }
                 });
             }
