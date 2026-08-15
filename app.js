@@ -288,8 +288,8 @@ async function loadGoogleSheetData(sheetIdInput, targetRowId = null) {
                             }
 
                             const cellId = row[0] !== undefined && row[0] !== null ? String(row[0]).trim() : null; // Cột A: id
-                            const cellAnh = row[1] ? String(row[1]).trim() : null; // Cột B: anh
-                            const cellText = row[2] ? String(row[2]).trim() : null; // Cột C: cau_text
+                            const cellAnh = row[1] ? String(row[1]).trim() : null; // Cột B: anh (nhiều ảnh ghép bởi dấu |)
+                            const cellText = row[2] ? String(row[2]).trim() : null; // Cột C: cau_text (nhiều câu text ghép bởi dấu |)
 
                             // Filter by targetRowId if specified
                             if (filterIdStr && filterIdStr !== 'all') {
@@ -298,18 +298,31 @@ async function loadGoogleSheetData(sheetIdInput, targetRowId = null) {
                                 }
                             }
 
-                            if (cellAnh && (cellAnh.startsWith('http') || cellAnh.startsWith('data:'))) {
-                                fetchedPhotos.push({
-                                    src: formatImageUrl(cellAnh),
-                                    caption: cellText || "Kỷ Niệm Tình Yêu 💖"
-                                });
-                            }
-                            if (cellText) {
-                                fetchedBadges.push({
-                                    text: cellText,
-                                    color: "#ff2a85"
-                                });
-                            }
+                            // Tách danh sách ảnh theo dấu |
+                            const anhList = cellAnh ? cellAnh.split('|').map(s => s.trim()).filter(s => s.length > 0) : [];
+                            // Tách danh sách câu text theo dấu |
+                            const textList = cellText ? cellText.split('|').map(s => s.trim()).filter(s => s.length > 0) : [];
+
+                            // Đưa từng ảnh vào danh sách hiển thị với chú thích tương ứng
+                            anhList.forEach((rawUrl, photoIdx) => {
+                                if (rawUrl.startsWith('http') || rawUrl.startsWith('data:')) {
+                                    const caption = textList[photoIdx] || textList[0] || "Kỷ Niệm Tình Yêu 💖";
+                                    fetchedPhotos.push({
+                                        src: formatImageUrl(rawUrl),
+                                        caption: caption
+                                    });
+                                }
+                            });
+
+                            // Đưa từng câu text vào danh sách badge chữ phát sáng
+                            textList.forEach((txt) => {
+                                if (txt) {
+                                    fetchedBadges.push({
+                                        text: txt,
+                                        color: "#ff2a85"
+                                    });
+                                }
+                            });
                         });
 
                         if (fetchedPhotos.length > 0 || fetchedBadges.length > 0) {
@@ -364,18 +377,29 @@ async function loadGoogleSheetData(sheetIdInput, targetRowId = null) {
                             }
                         }
 
-                        if (cellAnh && (cellAnh.startsWith('http') || cellAnh.startsWith('data:'))) {
-                            fetchedPhotos.push({
-                                src: formatImageUrl(cellAnh),
-                                caption: cellText || "Kỷ Niệm Tình Yêu 💖"
-                            });
-                        }
-                        if (cellText) {
-                            fetchedBadges.push({
-                                text: cellText,
-                                color: "#ff2a85"
-                            });
-                        }
+                        // Tách danh sách ảnh theo dấu |
+                        const anhList = cellAnh ? cellAnh.split('|').map(s => s.trim()).filter(s => s.length > 0) : [];
+                        // Tách danh sách câu text theo dấu |
+                        const textList = cellText ? cellText.split('|').map(s => s.trim()).filter(s => s.length > 0) : [];
+
+                        anhList.forEach((rawUrl, photoIdx) => {
+                            if (rawUrl.startsWith('http') || rawUrl.startsWith('data:')) {
+                                const caption = textList[photoIdx] || textList[0] || "Kỷ Niệm Tình Yêu 💖";
+                                fetchedPhotos.push({
+                                    src: formatImageUrl(rawUrl),
+                                    caption: caption
+                                });
+                            }
+                        });
+
+                        textList.forEach((txt) => {
+                            if (txt) {
+                                fetchedBadges.push({
+                                    text: txt,
+                                    color: "#ff2a85"
+                                });
+                            }
+                        });
                     });
 
                     if (fetchedPhotos.length > 0 || fetchedBadges.length > 0) {
