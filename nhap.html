@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Dữ Liệu Sheet Thiên Hà - Cosmos Dashboard</title>
+    <meta name="description" content="Trình quản lý và xem trước toàn bộ dữ liệu bảng tính Google Sheet thien_ha.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #07040d;
+            --panel-bg: rgba(18, 10, 28, 0.75);
+            --panel-border: rgba(255, 42, 133, 0.25);
+            --primary: #ff2a85;
+            --primary-glow: rgba(255, 42, 133, 0.4);
+            --text-main: #ffffff;
+            --text-muted: #b8a6c8;
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --radius-lg: 18px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(255, 42, 133, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 85% 75%, rgba(157, 78, 221, 0.15) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(0, 180, 216, 0.06) 0%, transparent 60%);
+            background-attachment: fixed;
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 24px 30px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 25px var(--primary-glow);
+            margin-bottom: 25px;
+        }
+
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #ff2a85, #9d4edd);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(255, 42, 133, 0.4);
+        }
+
+        .brand-text h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 30%, #ff73b3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .actions-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-family: inherit;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ff2a85, #e01e6a);
+            color: #ffffff;
+            box-shadow: 0 6px 18px rgba(255, 42, 133, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(255, 42, 133, 0.55);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Stats & Search Toolbar */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            max-width: 420px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            background: rgba(18, 10, 28, 0.7);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--radius-md);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 0.92rem;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(255, 42, 133, 0.3);
+            background: rgba(25, 14, 38, 0.9);
+        }
+
+        .stats-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 18px;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .stats-badge strong {
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        /* Table Card */
+        .table-card {
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        thead {
+            background: rgba(255, 42, 133, 0.08);
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        th {
+            padding: 16px 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #ff9ec6;
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        td {
+            padding: 16px 20px;
+            font-size: 0.92rem;
+            vertical-align: middle;
+        }
+
+        /* Cell Styling */
+        .id-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, rgba(255, 42, 133, 0.2), rgba(157, 78, 221, 0.2));
+            color: #ffb3c6;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            font-size: 0.95rem;
+            border: 1px solid rgba(255, 42, 133, 0.4);
+        }
+
+        .photo-gallery {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            max-width: 320px;
+        }
+
+        .photo-thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .photo-thumb:hover {
+            transform: scale(1.18);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary);
+            z-index: 10;
+        }
+
+        .text-chips {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-width: 320px;
+        }
+
+        .text-chip {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            color: #f1e9f7;
+            line-height: 1.4;
+        }
+
+        .pill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .pill-shape {
+            background: rgba(157, 78, 221, 0.2);
+            color: #d8b4fe;
+            border: 1px solid rgba(157, 78, 221, 0.4);
+        }
+
+        .pill-color {
+            background: rgba(255, 42, 133, 0.2);
+            color: #ff9ec6;
+            border: 1px solid rgba(255, 42, 133, 0.4);
+        }
+
+        .color-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .pill-belt {
+            background: rgba(0, 180, 216, 0.2);
+            color: #90e0ef;
+            border: 1px solid rgba(0, 180, 216, 0.4);
+        }
+
+        .pill-dir {
+            background: rgba(251, 133, 0, 0.2);
+            color: #ffb703;
+            border: 1px solid rgba(251, 133, 0, 0.4);
+        }
+
+        .action-buttons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.82rem;
+        }
+
+        .btn-view {
+            background: linear-gradient(135deg, #ff2a85, #c77dff);
+            color: #ffffff;
+        }
+
+        .btn-view:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 42, 133, 0.5);
+        }
+
+        .btn-copy {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-copy:hover {
+            background: rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+        }
+
+        /* Empty State & Loader */
+        .loader-state, .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .loader-spinner {
+            font-size: 2.4rem;
+            color: var(--primary);
+            margin-bottom: 14px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Image Preview Modal */
+        .preview-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            padding: 20px;
+        }
+
+        .preview-modal.open {
+            display: flex;
+        }
+
+        .preview-content {
+            position: relative;
+            max-width: 90vw;
+            max-height: 85vh;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 35px var(--primary-glow);
+        }
+
+        .preview-content img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .close-preview {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+
+        .close-preview:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(18, 10, 28, 0.92);
+            border: 1px solid var(--primary);
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px var(--primary-glow);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Dashboard Header -->
+        <header class="dashboard-header">
+            <div class="brand-section">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-database"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>Dữ Liệu Sheet Thiên Hà</h1>
+                    <p>Tab <code>thien_ha</code> &bull; Google Sheet ID: <code>1eJkfAcu32pMIvI1n2tD2vGGdDpmNBDHPuKE8RgkPNNk</code></p>
+                </div>
+            </div>
+
+            <div class="actions-section">
+                <button id="refresh-btn" class="btn btn-secondary">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                    <span>Làm mới</span>
+                </button>
+                <a href="index.html" target="_blank" class="btn btn-primary">
+                    <i class="fa-solid fa-atom"></i>
+                    <span>Mở Vũ Trụ 3D</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- Stats & Search Toolbar -->
+        <div class="toolbar">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="search-input" class="search-input" placeholder="Tìm kiếm theo ID, lời chúc, hình dạng...">
+            </div>
+
+            <div class="stats-badge">
+                <i class="fa-solid fa-layer-group"></i>
+                <span>Tổng số hàng: <strong id="total-rows-count">0</strong></span>
+            </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="table-card">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID (Cột A)</th>
+                            <th>Ảnh (Cột B)</th>
+                            <th>Câu Chúc (Cột C)</th>
+                            <th>Hình Dạng (Cột D)</th>
+                            <th>Màu Sắc (Cột E)</th>
+                            <th>Vành Đai (Cột F)</th>
+                            <th>Chiều Quay (Cột G)</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="loader-state" class="loader-state">
+                <i class="fa-solid fa-spinner loader-spinner"></i>
+                <p>Đang tải dữ liệu từ Google Sheet API...</p>
+            </div>
+
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <i class="fa-solid fa-folder-open" style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.6;"></i>
+                <p>Không tìm thấy dữ liệu nào phù hợp!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div id="preview-modal" class="preview-modal">
+        <div class="preview-content">
+            <button id="close-preview" class="close-preview">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <img id="preview-img" src="" alt="Ảnh xem trước">
+        </div>
+    </div>
+
+    <script>
+        const SHEET_ID = '1eJkfAcu32pMIvI1n2tD2vGGdDpmNBDHPuKE8RgkPNNk';
+        let allRowsData = [];
+
+        // Format Image URLs (Drive thumbnail conversion)
+        function formatImageUrl(url) {
+            if (!url || typeof url !== 'string') return '';
+            url = url.trim();
+            if (url.includes('drive.google.com')) {
+                const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+                if (match && match[1]) {
+                    return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
+                }
+            }
+            return url;
+        }
+
+        // Show quick toast notification
+        function showToast(msg) {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<i class="fa-solid fa-circle-check" style="color: #ff2a85;"></i> <span>${msg}</span>`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.remove(), 2500);
+        }
+
+        // Fetch Data from Google Sheet
+        async function fetchSheetData() {
+            const loader = document.getElementById('loader-state');
+            const empty = document.getElementById('empty-state');
+            const tbody = document.getElementById('table-body');
+
+            loader.style.display = 'block';
+            empty.style.display = 'none';
+            tbody.innerHTML = '';
+
+            try {
+                const primaryUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=thien_ha&t=${Date.now()}`;
+                const fallbackUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&t=${Date.now()}`;
+
+                let response = await fetch(primaryUrl);
+                let text = await response.text();
+                let jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
+
+                if (!jsonMatch || text.includes('INVALID_ARGUMENT') || text.includes('NO_SHEET')) {
+                    response = await fetch(fallbackUrl);
+                    text = await response.text();
+                    jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
+                }
+
+                if (jsonMatch) {
+                    const data = JSON.parse(jsonMatch[1]);
+                    const rows = data.table.rows || [];
+                    allRowsData = [];
+
+                    rows.forEach((row, idx) => {
+                        if (!row.c) return;
+                        const cellA = row.c[0] ? (row.c[0].v !== undefined ? row.c[0].v : row.c[0].f) : null;
+                        const cellB = row.c[1] ? (row.c[1].v !== undefined ? row.c[1].v : row.c[1].f) : null;
+                        const cellC = row.c[2] ? (row.c[2].v !== undefined ? row.c[2].v : row.c[2].f) : null;
+                        const cellD = row.c[3] ? (row.c[3].v !== undefined ? row.c[3].v : row.c[3].f) : null;
+                        const cellE = row.c[4] ? (row.c[4].v !== undefined ? row.c[4].v : row.c[4].f) : null;
+                        const cellF = row.c[5] ? (row.c[5].v !== undefined ? row.c[5].v : row.c[5].f) : null;
+                        const cellG = row.c[6] ? (row.c[6].v !== undefined ? row.c[6].v : row.c[6].f) : null;
+
+                        // Skip header
+                        if (idx === 0) {
+                            const strA = String(cellA || '').toLowerCase().trim();
+                            const strB = String(cellB || '').toLowerCase().trim();
+                            if (strA === 'id' || strB.includes('anh') || strB.includes('image')) return;
+                        }
+
+                        if (cellA || cellB || cellC) {
+                            allRowsData.push({
+                                id: cellA ? String(cellA).trim() : '',
+                                anh: cellB ? String(cellB).trim() : '',
+                                cau_text: cellC ? String(cellC).trim() : '',
+                                hinh_dang: cellD ? String(cellD).trim() : 'sphere',
+                                mau_sac: cellE ? String(cellE).trim() : 'pink',
+                                vanh_dai: cellF ? String(cellF).trim() : '1',
+                                chieu_quay: cellG ? String(cellG).trim() : 'reverse'
+                            });
+                        }
+                    });
+
+                    renderTable(allRowsData);
+                }
+            } catch (err) {
+                console.error("Lỗi tải dữ liệu:", err);
+                loader.innerHTML = `<i class="fa-solid fa-circle-exclamation" style="color: #ff4757; font-size: 2.2rem; margin-bottom: 10px;"></i><p>Không thể kết nối với Google Sheet. Vui lòng kiểm tra quyền chia sẻ!</p>`;
+            }
+        }
+
+        // Render Table Rows
+        function renderTable(data) {
+            const loader = document.getElementById('loader-state');
+            const empty = document.getElementById('empty-state');
+            const tbody = document.getElementById('table-body');
+            const totalCount = document.getElementById('total-rows-count');
+
+            loader.style.display = 'none';
+            totalCount.innerText = data.length;
+
+            if (data.length === 0) {
+                empty.style.display = 'block';
+                tbody.innerHTML = '';
+                return;
+            }
+
+            empty.style.display = 'none';
+            let html = '';
+
+            const themeColors = {
+                pink: '#ff2a85',
+                gold: '#ffb703',
+                purple: '#9d4edd',
+                cyan: '#00b4d8',
+                white: '#ffffff'
+            };
+
+            data.forEach(item => {
+                const anhList = item.anh ? item.anh.split('|').map(s => s.trim()).filter(Boolean) : [];
+                const textList = item.cau_text ? item.cau_text.split('|').map(s => s.trim()).filter(Boolean) : [];
+
+                // Photos HTML
+                let photosHtml = '<span style="color: var(--text-muted); font-size: 0.85rem;">(Không có ảnh)</span>';
+                if (anhList.length > 0) {
+                    photosHtml = '<div class="photo-gallery">';
+                    anhList.forEach(url => {
+                        const directUrl = formatImageUrl(url);
+                        photosHtml += `<img src="${directUrl}" class="photo-thumb" onclick="openPreview('${directUrl}')" title="Click để phóng to">`;
+                    });
+                    photosHtml += '</div>';
+                }
+
+                // Text HTML
+                let textsHtml = '<span style="color: var(--text-muted); font-size: 0.85rem;">(Không có chữ)</span>';
+                if (textList.length > 0) {
+                    textsHtml = '<div class="text-chips">';
+                    textList.forEach(txt => {
+                        textsHtml += `<div class="text-chip"><i class="fa-solid fa-quote-left" style="color: #ff2a85; font-size: 0.75rem; margin-right: 4px;"></i>${txt}</div>`;
+                    });
+                    textsHtml += '</div>';
+                }
+
+                // Shape Badge
+                const shapeMap = {
+                    sphere: 'Quả Cầu 3D',
+                    heart: 'Trái Tim 3D',
+                    spiral: 'Ngân Hà 3D',
+                    saturn: 'Thổ Tinh 3D'
+                };
+                const shapeName = shapeMap[item.hinh_dang.toLowerCase()] || item.hinh_dang;
+
+                // Color Badge
+                const dotColor = themeColors[item.mau_sac.toLowerCase()] || '#ff2a85';
+
+                // 3D View Link
+                const viewUrl = `index.html?id=${encodeURIComponent(item.id)}`;
+
+                html += `
+                    <tr>
+                        <td>
+                            <div class="id-badge">
+                                <i class="fa-solid fa-key"></i>
+                                <span>${item.id || 'N/A'}</span>
+                            </div>
+                        </td>
+                        <td>${photosHtml}</td>
+                        <td>${textsHtml}</td>
+                        <td><span class="pill-badge pill-shape"><i class="fa-solid fa-cube"></i> ${shapeName}</span></td>
+                        <td><span class="pill-badge pill-color"><span class="color-dot" style="background: ${dotColor};"></span> ${item.mau_sac}</span></td>
+                        <td><span class="pill-badge pill-belt"><i class="fa-solid fa-circle-notch"></i> ${item.vanh_dai === '2' ? '2 Vành chéo' : '1 Vành ngang'}</span></td>
+                        <td><span class="pill-badge pill-dir"><i class="fa-solid fa-rotate"></i> ${item.chieu_quay === 'same' ? 'Cùng chiều' : 'Ngược chiều'}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="${viewUrl}" target="_blank" class="btn btn-sm btn-view" title="Xem 3D Galaxy của ID này">
+                                    <i class="fa-solid fa-up-right-from-square"></i>
+                                    <span>Xem 3D</span>
+                                </a>
+                                <button class="btn btn-sm btn-copy" onclick="copyGalaxyLink('${item.id}')" title="Sao chép liên kết chia sẻ">
+                                    <i class="fa-solid fa-copy"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        // Copy Galaxy Link
+        function copyGalaxyLink(id) {
+            const url = `${window.location.origin}${window.location.pathname.replace('nhap.html', 'index.html')}?id=${encodeURIComponent(id)}`;
+            navigator.clipboard.writeText(url).then(() => {
+                showToast(`Đã sao chép link 3D cho ID "${id}"! 📋`);
+            }).catch(() => {
+                showToast(url);
+            });
+        }
+
+        // Open Image Preview
+        function openPreview(url) {
+            const modal = document.getElementById('preview-modal');
+            const img = document.getElementById('preview-img');
+            img.src = url;
+            modal.classList.add('open');
+        }
+
+        // Close Image Preview
+        document.getElementById('close-preview').addEventListener('click', () => {
+            document.getElementById('preview-modal').classList.remove('open');
+        });
+
+        document.getElementById('preview-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('preview-modal')) {
+                document.getElementById('preview-modal').classList.remove('open');
+            }
+        });
+
+        // Search Filtering
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            if (!query) {
+                renderTable(allRowsData);
+                return;
+            }
+
+            const filtered = allRowsData.filter(row => {
+                return (
+                    row.id.toLowerCase().includes(query) ||
+                    row.cau_text.toLowerCase().includes(query) ||
+                    row.hinh_dang.toLowerCase().includes(query) ||
+                    row.mau_sac.toLowerCase().includes(query)
+                );
+            });
+
+            renderTable(filtered);
+        });
+
+        // Refresh Button
+        document.getElementById('refresh-btn').addEventListener('click', fetchSheetData);
+
+        // Initial Load
+        window.addEventListener('DOMContentLoaded', fetchSheetData);
+    </script>
+</body>
+</html>
