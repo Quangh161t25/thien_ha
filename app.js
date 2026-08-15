@@ -547,23 +547,12 @@ async function loadGoogleSheetData(sheetIdInput, targetRowId = null) {
 
             updateOrbitWithSheetData(result.photos, result.badges);
             triggerCosmicZoomAnimation();
-
-            if (targetRowId) {
-                showToast(`Đã nạp ${result.photos.length} ảnh & ${result.badges.length} lời chúc cho ID "${targetRowId}"! 💖`, "success");
-            } else {
-                showToast(`Đã đồng bộ ${result.photos.length} ảnh & ${result.badges.length} lời chúc! 💖`, "success");
-            }
             return true;
         }
     } catch (err) {
         console.error("Sheet load error:", err);
     }
 
-    if (targetRowId) {
-        showToast(`Không tìm thấy dữ liệu cho ID "${targetRowId}" trong Sheet!`, "error");
-    } else {
-        showToast("Không thể tải dữ liệu! Hãy kiểm tra quyền chia sẻ Sheet.", "error");
-    }
     return false;
 }
 
