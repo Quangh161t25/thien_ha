@@ -180,14 +180,18 @@
                 <div class="sa-hint">👉 <b>Cách dùng:</b> Trong Google Sheet, bấm nút <b>Chia sẻ (Share)</b> &rarr; Thêm email trên làm <b>Người xem (Viewer)</b> hoặc Bật chia sẻ liên kết.</div>
             </div>
 
-            <p style="margin-top: 4px;">Nhập <b>Google Sheet ID</b> hoặc <b>Link Google Sheet</b> của bạn:</p>
-            <input type="text" id="sheet-id-input" value="1eJkfAcu32pMIvI1n2tD2vGGdDpmNBDHPuKE8RgkPNNk" placeholder="Ví dụ: 1eJkfAcu32pMIvI1n2tD2vGGdDpmNBDHPuKE8RgkPNNk">
+            <p style="margin-top: 4px;">Google Sheet ID / Link:</p>
+            <input type="text" id="sheet-id-input" value="1eJkfAcu32pMIvI1n2tD2vGGdDpmNBDHPuKE8RgkPNNk" placeholder="Nhập ID hoặc link Sheet">
             
+            <p style="margin-top: 6px;">ID hàng cần tải (Cột A - để trống để tải tất cả):</p>
+            <input type="text" id="row-id-input" placeholder="Ví dụ: 1, 2, quang (tùy chọn)">
+
             <div class="modal-actions" style="gap: 10px; margin-top: 8px;">
                 <button id="load-sheet-btn" class="btn btn-primary"><i class="fa-solid fa-cloud-arrow-down"></i> Tải Dữ Liệu Qua API</button>
             </div>
             <p style="font-size: 0.75rem; color: #aaa; margin-top: 6px;">
-                💡 <b>Cấu trúc cột:</b> Cột A = Link ảnh | Cột B = Lời chúc | Cột C = Mã màu (tùy chọn).
+                💡 <b>Cấu trúc bảng <code>thien_ha</code>:</b> Cột A = <code>id</code> | Cột B = <code>anh</code> | Cột C = <code>cau_text</code><br>
+                🔗 <b>Link xem nhanh theo ID:</b> <code>?id=1</code> (Tự động lấy ảnh cột B & lời chúc cột C của ID=1).
             </p>
         </div>
     </div>

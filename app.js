@@ -42,7 +42,7 @@ const THEMES = {
     white:  { c1: '#ffffff', c2: '#ffb3c6', star: '#ffffff' }
 };
 
-// Preset Romantic Badges and Images
+// Preset Romantic Badges and Images (Fallback / Demo)
 const INITIAL_BADGES = [
     { text: "I LOVE YOU", type: "text", color: "#ff2a85" },
     { text: "AMOR DE MI VIDA", type: "text", color: "#ffffff" },
@@ -207,8 +207,40 @@ function extractSheetId(input) {
     return match ? match[1] : input.trim();
 }
 
-// Fetch Google Sheet Data via Official Google Sheets API v4 or GViz Fallback
-async function loadGoogleSheetData(sheetIdInput) {
+// Parse URL Parameters (supports ?id=1 or ?sheet=SHEET_ID&id=1 or ?id=SHEET_ID)
+function parseUrlParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    let sheetId = urlParams.get('sheet') || urlParams.get('sheet_id');
+    let rowId = urlParams.get('row_id') || urlParams.get('user_id') || urlParams.get('uid');
+    const genericId = urlParams.get('id');
+
+    if (genericId) {
+        const cleanId = genericId.trim();
+        // If cleanId is long (like a Google Sheet ID ~25+ chars or contains /d/)
+        if (cleanId.length > 25 || cleanId.includes('/')) {
+            sheetId = cleanId;
+        } else {
+            // It's a row ID to filter (e.g. 1, 2, 'user1', 'quang', etc.)
+            rowId = cleanId;
+        }
+    }
+
+    return {
+        sheetId: sheetId || CONFIG.defaultSheetId,
+        rowId: rowId || null
+    };
+}
+
+/**
+ * Fetch Google Sheet Data from Tab 'thien_ha'
+ * Structure:
+ * - Cột A: id
+ * - Cột B: anh
+ * - Cột C: cau_text
+ * @param {string} sheetIdInput 
+ * @param {string|null} targetRowId (nếu truyền ID sẽ lọc đúng ID đó)
+ */
+async function loadGoogleSheetData(sheetIdInput, targetRowId = null) {
     const sheetId = extractSheetId(sheetIdInput);
     if (!sheetId) {
         showToast("Vui lòng nhập Google Sheet ID hoặc Link!", "error");
@@ -218,6 +250,8 @@ async function loadGoogleSheetData(sheetIdInput) {
     let fetchedPhotos = [];
     let fetchedBadges = [];
     let loadedSuccessfully = false;
+
+    const filterIdStr = targetRowId ? String(targetRowId).toLowerCase().trim() : null;
 
     // 1. Try Official Google Sheets API v4 with Service Account Token
     try {
@@ -245,21 +279,35 @@ async function loadGoogleSheetData(sheetIdInput) {
 
                         rows.forEach((row, index) => {
                             // Skip header row if contains title keywords
-                            if (index === 0 && row[0] && (row[0].toLowerCase().includes('link') || row[0].toLowerCase().includes('ảnh') || row[0].toLowerCase().includes('image'))) {
-                                return;
+                            if (index === 0) {
+                                const col0 = String(row[0] || '').toLowerCase().trim();
+                                const col1 = String(row[1] || '').toLowerCase().trim();
+                                if (col0 === 'id' || col1.includes('anh') || col1.includes('image')) {
+                                    return;
+                                }
                             }
 
-                            const cellA = row[0] || null; // Cột A: Link ảnh
-                            const cellB = row[1] || null; // Cột B: Lời chúc
-                            const cellC = row[2] || null; // Cột C: Màu sắc (tùy chọn)
+                            const cellId = row[0] !== undefined && row[0] !== null ? String(row[0]).trim() : null; // Cột A: id
+                            const cellAnh = row[1] ? String(row[1]).trim() : null; // Cột B: anh
+                            const cellText = row[2] ? String(row[2]).trim() : null; // Cột C: cau_text
 
-                            if (cellA && typeof cellA === 'string' && (cellA.startsWith('http') || cellA.startsWith('data:'))) {
-                                fetchedPhotos.push(formatImageUrl(cellA));
+                            // Filter by targetRowId if specified
+                            if (filterIdStr && filterIdStr !== 'all') {
+                                if (!cellId || cellId.toLowerCase() !== filterIdStr) {
+                                    return;
+                                }
                             }
-                            if (cellB) {
+
+                            if (cellAnh && (cellAnh.startsWith('http') || cellAnh.startsWith('data:'))) {
+                                fetchedPhotos.push({
+                                    src: formatImageUrl(cellAnh),
+                                    caption: cellText || "Kỷ Niệm Tình Yêu 💖"
+                                });
+                            }
+                            if (cellText) {
                                 fetchedBadges.push({
-                                    text: String(cellB),
-                                    color: cellC || "#ff2a85"
+                                    text: cellText,
+                                    color: "#ff2a85"
                                 });
                             }
                         });
@@ -294,19 +342,38 @@ async function loadGoogleSheetData(sheetIdInput) {
             if (jsonMatch) {
                 const data = JSON.parse(jsonMatch[1]);
                 if (data.table && data.table.rows) {
-                    data.table.rows.forEach(row => {
+                    data.table.rows.forEach((row, index) => {
                         if (!row.c) return;
-                        const cellA = row.c[0] ? row.c[0].v : null;
-                        const cellB = row.c[1] ? row.c[1].v : null;
-                        const cellC = row.c[2] ? row.c[2].v : null;
+                        const cellA = row.c[0] ? (row.c[0].v !== undefined ? row.c[0].v : row.c[0].f) : null;
+                        const cellB = row.c[1] ? (row.c[1].v !== undefined ? row.c[1].v : row.c[1].f) : null;
+                        const cellC = row.c[2] ? (row.c[2].v !== undefined ? row.c[2].v : row.c[2].f) : null;
 
-                        if (cellA && typeof cellA === 'string' && (cellA.startsWith('http') || cellA.startsWith('data:'))) {
-                            fetchedPhotos.push(formatImageUrl(cellA));
+                        if (index === 0) {
+                            const strA = String(cellA || '').toLowerCase().trim();
+                            const strB = String(cellB || '').toLowerCase().trim();
+                            if (strA === 'id' || strB.includes('anh') || strB.includes('image')) return;
                         }
-                        if (cellB) {
+
+                        const cellId = cellA !== null && cellA !== undefined ? String(cellA).trim() : null;
+                        const cellAnh = cellB ? String(cellB).trim() : null;
+                        const cellText = cellC ? String(cellC).trim() : null;
+
+                        if (filterIdStr && filterIdStr !== 'all') {
+                            if (!cellId || cellId.toLowerCase() !== filterIdStr) {
+                                return;
+                            }
+                        }
+
+                        if (cellAnh && (cellAnh.startsWith('http') || cellAnh.startsWith('data:'))) {
+                            fetchedPhotos.push({
+                                src: formatImageUrl(cellAnh),
+                                caption: cellText || "Kỷ Niệm Tình Yêu 💖"
+                            });
+                        }
+                        if (cellText) {
                             fetchedBadges.push({
-                                text: String(cellB),
-                                color: cellC || "#ff2a85"
+                                text: cellText,
+                                color: "#ff2a85"
                             });
                         }
                     });
@@ -323,10 +390,18 @@ async function loadGoogleSheetData(sheetIdInput) {
 
     if (loadedSuccessfully) {
         updateOrbitWithSheetData(fetchedPhotos, fetchedBadges);
-        showToast(`Đã đồng bộ ${fetchedPhotos.length} ảnh và ${fetchedBadges.length} lời chúc! 💖`, "success");
+        if (targetRowId) {
+            showToast(`Đã nạp ${fetchedPhotos.length} ảnh và ${fetchedBadges.length} câu text cho ID "${targetRowId}"! 💖`, "success");
+        } else {
+            showToast(`Đã nạp ${fetchedPhotos.length} ảnh và ${fetchedBadges.length} câu text từ Sheet! 💖`, "success");
+        }
         return true;
     } else {
-        showToast("Không thể tải dữ liệu! Hãy chia sẻ Sheet với email service account hoặc mở quyền xem công khai.", "error");
+        if (targetRowId) {
+            showToast(`Không tìm thấy dữ liệu cho ID "${targetRowId}" trong Sheet!`, "error");
+        } else {
+            showToast("Không thể tải dữ liệu! Hãy chia sẻ Sheet với email service account hoặc mở quyền xem công khai.", "error");
+        }
         return false;
     }
 }
@@ -340,7 +415,10 @@ function updateOrbitWithSheetData(photos, badges) {
 
     const totalItems = Math.max(1, photos.length + badges.length);
 
-    photos.forEach((src, idx) => {
+    photos.forEach((item, idx) => {
+        const src = typeof item === 'string' ? item : item.src;
+        const caption = typeof item === 'object' && item.caption ? item.caption : "Kỷ Niệm Tình Yêu 💖";
+
         createPhotoTexture(src, (texture) => {
             const geometry = new THREE.PlaneGeometry(3.6, 3.6);
             const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide });
@@ -348,6 +426,7 @@ function updateOrbitWithSheetData(photos, badges) {
             mesh.userData = { 
                 isPhoto: true, 
                 src: src, 
+                caption: caption,
                 angleOffset: (idx / totalItems) * Math.PI * 2 + Math.random() * 0.3, 
                 radiusOffset: 16 + Math.random() * 22, 
                 yOffset: (Math.random() - 0.5) * 14,
@@ -359,14 +438,17 @@ function updateOrbitWithSheetData(photos, badges) {
     });
 
     badges.forEach((badge, idx) => {
-        const texture = createBadgeTexture(badge.text, badge.color || "#ff2a85");
+        const text = typeof badge === 'string' ? badge : badge.text;
+        const color = typeof badge === 'object' && badge.color ? badge.color : "#ff2a85";
+
+        const texture = createBadgeTexture(text, color);
         const geometry = new THREE.PlaneGeometry(5.2, 1.6);
         const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide });
         const mesh = new THREE.Mesh(geometry, material);
         const totalIdx = photos.length + idx;
         mesh.userData = { 
             isBadge: true, 
-            text: badge.text, 
+            text: text, 
             angleOffset: (totalIdx / totalItems) * Math.PI * 2 + Math.random() * 0.3, 
             radiusOffset: 15 + Math.random() * 21, 
             yOffset: (Math.random() - 0.5) * 14,
@@ -388,11 +470,15 @@ window.addEventListener('DOMContentLoaded', () => {
     initOrbitItems();
 
     // Auto-load Sheet from URL param or default configured Sheet ID
-    const urlParams = new URLSearchParams(window.location.search);
-    const targetSheetId = urlParams.get('id') || urlParams.get('sheet') || CONFIG.defaultSheetId;
+    const { sheetId, rowId } = parseUrlParams();
 
-    if (targetSheetId) {
-        loadGoogleSheetData(targetSheetId);
+    const rowIdInput = document.getElementById('row-id-input');
+    if (rowIdInput && rowId) {
+        rowIdInput.value = rowId;
+    }
+
+    if (sheetId) {
+        loadGoogleSheetData(sheetId, rowId);
     }
 
     initEvents();
@@ -810,7 +896,7 @@ function createPhotoTexture(imgSrc, callback) {
     };
 }
 
-// Initialize Orbiting Items
+// Initialize Orbiting Items (Fallback demo items)
 function initOrbitItems() {
     while (orbitGroup.children.length > 0) {
         orbitGroup.remove(orbitGroup.children[0]);
@@ -831,6 +917,7 @@ function initOrbitItems() {
             mesh.userData = { 
                 isPhoto: true, 
                 src: src, 
+                caption: "Kỷ Niệm Tình Yêu 💖",
                 angleOffset: (idx / totalItems) * Math.PI * 2 + Math.random() * 0.3, 
                 radiusOffset: 16 + Math.random() * 22, 
                 yOffset: (Math.random() - 0.5) * 14,
@@ -880,6 +967,7 @@ function addCustomPhoto(file) {
             mesh.userData = { 
                 isPhoto: true, 
                 src: src, 
+                caption: "Khoảnh Khắc Đẹp ✨",
                 angleOffset: Math.random() * Math.PI * 2, 
                 radiusOffset: 16 + Math.random() * 22, 
                 yOffset: (Math.random() - 0.5) * 14,
@@ -1198,7 +1286,7 @@ function initEvents() {
                 if (photoWrapper) photoWrapper.style.display = 'block';
                 if (badgeCard) badgeCard.style.display = 'none';
                 if (modalImg) modalImg.src = hit.userData.src;
-                if (modalTitle) modalTitle.innerText = "Kỷ Niệm Tình Yêu 💖";
+                if (modalTitle) modalTitle.innerText = hit.userData.caption || "Kỷ Niệm Tình Yêu 💖";
                 if (photoModal) photoModal.classList.add('open');
             } else if (hit.userData.isBadge) {
                 if (photoWrapper) photoWrapper.style.display = 'none';
@@ -1233,6 +1321,7 @@ function initEvents() {
     const closeSheetModal = document.getElementById('close-sheet-modal');
     const loadSheetBtn = document.getElementById('load-sheet-btn');
     const sheetIdInput = document.getElementById('sheet-id-input');
+    const rowIdInput = document.getElementById('row-id-input');
     const copySaEmailBtn = document.getElementById('copy-sa-email-btn');
 
     if (copySaEmailBtn) {
@@ -1258,15 +1347,17 @@ function initEvents() {
         });
 
         const handleLoadSheet = async () => {
-            const val = sheetIdInput.value;
-            if (!val.trim()) {
+            const val = sheetIdInput ? sheetIdInput.value.trim() : '';
+            const rowVal = rowIdInput ? rowIdInput.value.trim() : null;
+
+            if (!val) {
                 showToast("Vui lòng nhập Google Sheet ID hoặc Link!", "error");
                 return;
             }
             loadSheetBtn.disabled = true;
             loadSheetBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu API...';
 
-            const success = await loadGoogleSheetData(val);
+            const success = await loadGoogleSheetData(val, rowVal || null);
             loadSheetBtn.disabled = false;
             loadSheetBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Tải Dữ Liệu Qua API';
 
@@ -1278,6 +1369,11 @@ function initEvents() {
         if (loadSheetBtn) loadSheetBtn.addEventListener('click', handleLoadSheet);
         if (sheetIdInput) {
             sheetIdInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') handleLoadSheet();
+            });
+        }
+        if (rowIdInput) {
+            rowIdInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') handleLoadSheet();
             });
         }
