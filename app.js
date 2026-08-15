@@ -42,24 +42,9 @@ const THEMES = {
     white:  { c1: '#ffffff', c2: '#ffb3c6', star: '#ffffff' }
 };
 
-// Preset Romantic Badges and Images (Fallback / Demo)
-const INITIAL_BADGES = [
-    { text: "I LOVE YOU", type: "text", color: "#ff2a85" },
-    { text: "AMOR DE MI VIDA", type: "text", color: "#ffffff" },
-    { text: "MY UNIVERSE 💖", type: "text", color: "#ff73b3" },
-    { text: "FOREVER TOGETHER", type: "text", color: "#ffffff" },
-    { text: "ANH & EM", type: "text", color: "#ff2a85" },
-    { text: "YOU & ME 💕", type: "text", color: "#ffffff" }
-];
-
-const INITIAL_PHOTOS = [
-    "https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=600&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=600&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?q=80&w=600&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=600&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1494774157365-9e04c6720e47?q=80&w=600&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=600&auto=format&fit=crop"
-];
+// Preset Romantic Badges and Images (Empty by default - only loaded when ID is provided)
+const INITIAL_BADGES = [];
+const INITIAL_PHOTOS = [];
 
 // App State
 let scene, camera, renderer, controls;
@@ -511,10 +496,10 @@ window.addEventListener('DOMContentLoaded', () => {
     createStarField();
     createMeteoriteRings();
     
-    // Initial placeholder items so 3D universe renders immediately
-    initOrbitItems();
+    // Clear any previous orbit items
+    clearOrbitItems();
 
-    // Auto-load Sheet from URL param or default configured Sheet ID
+    // Auto-load Sheet ONLY when an ID parameter is present in URL (?id=...)
     const { sheetId, rowId } = parseUrlParams();
 
     const rowIdInput = document.getElementById('row-id-input');
@@ -522,9 +507,11 @@ window.addEventListener('DOMContentLoaded', () => {
         rowIdInput.value = rowId;
     }
 
-    if (sheetId) {
-        loadGoogleSheetData(sheetId, rowId);
+    if (rowId) {
+        // Only load and render photos/texts if an ID is specified
+        loadGoogleSheetData(sheetId || CONFIG.defaultSheetId, rowId);
     } else {
+        // No ID specified -> do NOT show any photos or texts, just render the cosmic galaxy
         triggerCosmicZoomAnimation();
     }
 
@@ -943,63 +930,14 @@ function createPhotoTexture(imgSrc, callback) {
     };
 }
 
-// Initialize Orbiting Items (Fallback demo items)
-function initOrbitItems() {
-    while (orbitGroup.children.length > 0) {
-        orbitGroup.remove(orbitGroup.children[0]);
+// Clear Orbiting Items
+function clearOrbitItems() {
+    if (orbitGroup) {
+        while (orbitGroup.children.length > 0) {
+            orbitGroup.remove(orbitGroup.children[0]);
+        }
     }
     photoMeshes = [];
-
-    const totalItems = INITIAL_PHOTOS.length + INITIAL_BADGES.length;
-
-    INITIAL_PHOTOS.forEach((src, idx) => {
-        createPhotoTexture(src, (texture) => {
-            const geometry = new THREE.PlaneGeometry(3.6, 3.6);
-            const material = new THREE.MeshBasicMaterial({
-                map: texture,
-                transparent: true,
-                side: THREE.DoubleSide
-            });
-            const mesh = new THREE.Mesh(geometry, material);
-            mesh.userData = { 
-                isPhoto: true, 
-                src: src, 
-                caption: "Kỷ Niệm Tình Yêu 💖",
-                angleOffset: (idx / totalItems) * Math.PI * 2 + Math.random() * 0.3, 
-                radiusOffset: 16 + Math.random() * 22, 
-                yOffset: (Math.random() - 0.5) * 14,
-                speedFactor: 0.8 + Math.random() * 0.5,
-                currentExpansion: 0.05
-            };
-            mesh.scale.set(0.01, 0.01, 0.01);
-            orbitGroup.add(mesh);
-            photoMeshes.push(mesh);
-        });
-    });
-
-    INITIAL_BADGES.forEach((badge, idx) => {
-        const texture = createBadgeTexture(badge.text, badge.color);
-        const geometry = new THREE.PlaneGeometry(5.2, 1.6);
-        const material = new THREE.MeshBasicMaterial({
-            map: texture,
-            transparent: true,
-            side: THREE.DoubleSide
-        });
-        const mesh = new THREE.Mesh(geometry, material);
-        const totalIdx = INITIAL_PHOTOS.length + idx;
-        mesh.userData = { 
-            isBadge: true, 
-            text: badge.text, 
-            angleOffset: (totalIdx / totalItems) * Math.PI * 2 + Math.random() * 0.3, 
-            radiusOffset: 15 + Math.random() * 21, 
-            yOffset: (Math.random() - 0.5) * 14,
-            speedFactor: 0.8 + Math.random() * 0.5,
-            currentExpansion: 0.05
-        };
-        mesh.scale.set(0.01, 0.01, 0.01);
-        orbitGroup.add(mesh);
-        photoMeshes.push(mesh);
-    });
 }
 
 // Add User Custom Photo File
@@ -1698,7 +1636,7 @@ function initEvents() {
 
             createSparklingHeart();
             createMeteoriteRings();
-            initOrbitItems();
+            clearOrbitItems();
             triggerCosmicZoomAnimation();
             showToast("Đã khôi phục cài đặt mặc định 💫");
         });
