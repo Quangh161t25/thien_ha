@@ -246,6 +246,107 @@ function parseUrlParams() {
     };
 }
 
+// Apply Custom Galaxy Settings from Sheet columns (hinh_dang, mau_sac, vanh_dai, chieu_quay)
+function applyCustomConfig(cfg) {
+    if (!cfg) return;
+
+    let needsHeartRecreate = false;
+    let needsRingRecreate = false;
+
+    // 1. Hình dạng trung tâm (hinh_dang)
+    if (cfg.hinh_dang) {
+        const rawShape = String(cfg.hinh_dang).toLowerCase().trim();
+        let targetShape = null;
+
+        if (rawShape.includes('tim') || rawShape.includes('heart')) {
+            targetShape = 'heart';
+        } else if (rawShape.includes('ngan') || rawShape.includes('ha') || rawShape.includes('spiral') || rawShape.includes('galaxy') || rawShape.includes('xoan')) {
+            targetShape = 'spiral';
+        } else if (rawShape.includes('tho') || rawShape.includes('saturn') || rawShape.includes('sao tho')) {
+            targetShape = 'saturn';
+        } else if (rawShape.includes('cau') || rawShape.includes('sphere') || rawShape.includes('tron') || rawShape.includes('cầu')) {
+            targetShape = 'sphere';
+        }
+
+        if (targetShape && targetShape !== CONFIG.shape) {
+            CONFIG.shape = targetShape;
+            needsHeartRecreate = true;
+            document.querySelectorAll('.shape-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.shape === targetShape);
+            });
+        }
+    }
+
+    // 2. Màu sắc tinh vân (mau_sac)
+    if (cfg.mau_sac) {
+        const rawColor = String(cfg.mau_sac).toLowerCase().trim();
+        let targetTheme = null;
+
+        if (rawColor.includes('hong') || rawColor.includes('hồng') || rawColor.includes('pink') || rawColor.includes('đỏ') || rawColor.includes('do')) {
+            targetTheme = 'pink';
+        } else if (rawColor.includes('vang') || rawColor.includes('vàng') || rawColor.includes('gold') || rawColor.includes('cam') || rawColor.includes('yellow')) {
+            targetTheme = 'gold';
+        } else if (rawColor.includes('tim') || rawColor.includes('tím') || rawColor.includes('purple')) {
+            targetTheme = 'purple';
+        } else if (rawColor.includes('xanh') || rawColor.includes('cyan') || rawColor.includes('blue') || rawColor.includes('biển') || rawColor.includes('bien')) {
+            targetTheme = 'cyan';
+        } else if (rawColor.includes('trang') || rawColor.includes('trắng') || rawColor.includes('white')) {
+            targetTheme = 'white';
+        }
+
+        if (targetTheme && targetTheme !== CONFIG.theme) {
+            CONFIG.theme = targetTheme;
+            needsHeartRecreate = true;
+            needsRingRecreate = true;
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.theme === targetTheme);
+            });
+        }
+    }
+
+    // 3. Vành đai thiên thạch (vanh_dai)
+    if (cfg.vanh_dai) {
+        const rawBelt = String(cfg.vanh_dai).toLowerCase().trim();
+        let targetBelt = null;
+
+        if (rawBelt.includes('2') || rawBelt.includes('cheo') || rawBelt.includes('chéo') || rawBelt.includes('hai')) {
+            targetBelt = '2';
+        } else if (rawBelt.includes('1') || rawBelt.includes('ngang') || rawBelt.includes('mot') || rawBelt.includes('một')) {
+            targetBelt = '1';
+        }
+
+        if (targetBelt && targetBelt !== CONFIG.meteorBeltMode) {
+            CONFIG.meteorBeltMode = targetBelt;
+            needsRingRecreate = true;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.belt === targetBelt);
+            });
+        }
+    }
+
+    // 4. Chiều quay thiên thạch (chieu_quay)
+    if (cfg.chieu_quay) {
+        const rawDir = String(cfg.chieu_quay).toLowerCase().trim();
+        let targetDir = null;
+
+        if (rawDir.includes('cung') || rawDir.includes('cùng') || rawDir.includes('same') || rawDir.includes('thuan') || rawDir.includes('thuận')) {
+            targetDir = 'same';
+        } else if (rawDir.includes('nguoc') || rawDir.includes('ngược') || rawDir.includes('reverse')) {
+            targetDir = 'reverse';
+        }
+
+        if (targetDir && targetDir !== CONFIG.rotationDir) {
+            CONFIG.rotationDir = targetDir;
+            document.querySelectorAll('.dir-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.dir === targetDir);
+            });
+        }
+    }
+
+    if (needsHeartRecreate) createSparklingHeart();
+    if (needsRingRecreate) createMeteoriteRings();
+}
+
 // Fast GViz Data Fetcher (ultra low latency)
 async function fetchGvizData(sheetId, filterIdStr) {
     const primaryUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=thien_ha&t=${Date.now()}`;
@@ -268,12 +369,17 @@ async function fetchGvizData(sheetId, filterIdStr) {
 
     const fetchedPhotos = [];
     const fetchedBadges = [];
+    let matchedConfig = null;
 
     data.table.rows.forEach((row, index) => {
         if (!row.c) return;
         const cellA = row.c[0] ? (row.c[0].v !== undefined ? row.c[0].v : row.c[0].f) : null;
         const cellB = row.c[1] ? (row.c[1].v !== undefined ? row.c[1].v : row.c[1].f) : null;
         const cellC = row.c[2] ? (row.c[2].v !== undefined ? row.c[2].v : row.c[2].f) : null;
+        const cellD = row.c[3] ? (row.c[3].v !== undefined ? row.c[3].v : row.c[3].f) : null; // hinh_dang
+        const cellE = row.c[4] ? (row.c[4].v !== undefined ? row.c[4].v : row.c[4].f) : null; // mau_sac
+        const cellF = row.c[5] ? (row.c[5].v !== undefined ? row.c[5].v : row.c[5].f) : null; // vanh_dai
+        const cellG = row.c[6] ? (row.c[6].v !== undefined ? row.c[6].v : row.c[6].f) : null; // chieu_quay
 
         if (index === 0) {
             const strA = String(cellA || '').toLowerCase().trim();
@@ -287,6 +393,16 @@ async function fetchGvizData(sheetId, filterIdStr) {
 
         if (filterIdStr && filterIdStr !== 'all') {
             if (!cellId || cellId.toLowerCase() !== filterIdStr) return;
+        }
+
+        // Capture custom settings from matched row
+        if (!matchedConfig && (cellD || cellE || cellF || cellG)) {
+            matchedConfig = {
+                hinh_dang: cellD,
+                mau_sac: cellE,
+                vanh_dai: cellF,
+                chieu_quay: cellG
+            };
         }
 
         const anhList = cellAnh ? cellAnh.split('|').map(s => s.trim()).filter(s => s.length > 0) : [];
@@ -316,7 +432,7 @@ async function fetchGvizData(sheetId, filterIdStr) {
         throw new Error("No matching rows found in GViz");
     }
 
-    return { photos: fetchedPhotos, badges: fetchedBadges };
+    return { photos: fetchedPhotos, badges: fetchedBadges, config: matchedConfig };
 }
 
 // Google Sheets API v4 Data Fetcher via Service Account
@@ -334,7 +450,7 @@ async function fetchServiceAccountData(sheetId, filterIdStr) {
     const thienHaSheet = metaData.sheets.find(s => s.properties.title.toLowerCase() === 'thien_ha');
     if (thienHaSheet) targetSheetTitle = thienHaSheet.properties.title;
 
-    const valuesRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/'${encodeURIComponent(targetSheetTitle)}'!A:C`, {
+    const valuesRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/'${encodeURIComponent(targetSheetTitle)}'!A:G`, {
         headers: { Authorization: `Bearer ${token}` }
     });
     if (!valuesRes.ok) throw new Error("Values error");
@@ -344,6 +460,7 @@ async function fetchServiceAccountData(sheetId, filterIdStr) {
 
     const fetchedPhotos = [];
     const fetchedBadges = [];
+    let matchedConfig = null;
 
     rows.forEach((row, index) => {
         if (index === 0) {
@@ -355,9 +472,22 @@ async function fetchServiceAccountData(sheetId, filterIdStr) {
         const cellId = row[0] !== undefined && row[0] !== null ? String(row[0]).trim() : null;
         const cellAnh = row[1] ? String(row[1]).trim() : null;
         const cellText = row[2] ? String(row[2]).trim() : null;
+        const cellD = row[3] ? String(row[3]).trim() : null; // hinh_dang
+        const cellE = row[4] ? String(row[4]).trim() : null; // mau_sac
+        const cellF = row[5] ? String(row[5]).trim() : null; // vanh_dai
+        const cellG = row[6] ? String(row[6]).trim() : null; // chieu_quay
 
         if (filterIdStr && filterIdStr !== 'all') {
             if (!cellId || cellId.toLowerCase() !== filterIdStr) return;
+        }
+
+        if (!matchedConfig && (cellD || cellE || cellF || cellG)) {
+            matchedConfig = {
+                hinh_dang: cellD,
+                mau_sac: cellE,
+                vanh_dai: cellF,
+                chieu_quay: cellG
+            };
         }
 
         const anhList = cellAnh ? cellAnh.split('|').map(s => s.trim()).filter(s => s.length > 0) : [];
@@ -387,7 +517,7 @@ async function fetchServiceAccountData(sheetId, filterIdStr) {
         throw new Error("No matching rows found in Service Account API");
     }
 
-    return { photos: fetchedPhotos, badges: fetchedBadges };
+    return { photos: fetchedPhotos, badges: fetchedBadges, config: matchedConfig };
 }
 
 /**
@@ -410,6 +540,11 @@ async function loadGoogleSheetData(sheetIdInput, targetRowId = null) {
         ]);
 
         if (result && (result.photos.length > 0 || result.badges.length > 0)) {
+            // Apply custom configurations from Sheet columns if present
+            if (result.config) {
+                applyCustomConfig(result.config);
+            }
+
             updateOrbitWithSheetData(result.photos, result.badges);
             triggerCosmicZoomAnimation();
 
