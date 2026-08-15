@@ -490,6 +490,72 @@ input[type="range"]::-webkit-slider-thumb:hover {
     margin-top: 8px;
 }
 
+/* Service Account Info Box */
+.service-account-box {
+    background: rgba(255, 42, 133, 0.08);
+    border: 1px dashed rgba(255, 115, 179, 0.4);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sa-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent-light-pink);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sa-email-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 6px 10px;
+    gap: 8px;
+}
+
+.sa-email-row code {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.78rem;
+    color: #ffccd5;
+    word-break: break-all;
+    user-select: all;
+}
+
+.btn-copy {
+    background: var(--accent-pink);
+    border: none;
+    color: #ffffff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+}
+
+.btn-copy:hover {
+    background: var(--accent-light-pink);
+    transform: scale(1.04);
+}
+
+.sa-hint {
+    font-size: 0.75rem;
+    color: #cccccc;
+    line-height: 1.35;
+}
+
 /* Photo Modal Specifics */
 .photo-card-modal {
     max-width: 520px;

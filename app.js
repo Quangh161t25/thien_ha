@@ -1,10 +1,26 @@
 /**
  * Sparkling Heart Galaxy 3D - Vũ Trụ Tình Yêu
- * Pure Three.js - 60FPS High Performance & Romantic Aesthetics
+ * Pure Three.js & Google Sheets API Integration via Service Account
  */
+
+// Google Cloud Service Account API Configuration (from test-gia-ason.json)
+const SERVICE_ACCOUNT = {
+    type: "service_account",
+    project_id: "cty-lnk-161",
+    private_key_id: "8b79277cbe4d9b5a7b8254a0961a5d4932283388",
+    private_key: "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC3NN84hLTkQPZd\nLj7niXZTICq7nHsuTn3J6r2Paq12m70/lYSmrwh1i0EStr9bO19QM8cevGlslwGr\nWSVOLJlc6+w1HGPKvRXtA41kYV9MYIvpzIPQtkFE7Hxq71QyBARcv39Lfzze6Ioj\n3G8VBvAKFLAnCUr97GHRv+KbCTFxPZupd3PEB+xS5ZUlzdBCEZvDid3iXaaEJJ+l\nTd1apAGQHjtnDTLOkiTa8zf7X5ebALwnI9MziOdN8VyprHXGhkachPbKyrG0QwEs\n2jtiI6Y5ULsBPjNefoavH8MKU5DEAT9h0fZ7KfsKYVMDuXqmEKBs0D3B4Z6aDZQW\nwT2dDRZDAgMBAAECggEAEIuVoSzZVuFhaz1GI9ji0IacjvO50cIq7M8Zrj4/F756\nEw6PIhKENafAb7U4INm2AnzUMO8CqL9Jpxs85qUM3W4JysSByqLUiRW2184amIyb\nj7jCXfLBTQn8AbHgrUepl5d/vBmFYMgon/mqjbNiGDb4FZgEQSkie5o6fi/dWp5d\nNahbZl+WTOB/znhAfKh/zferHNxldR/ERmwOubZUerkqysWiBigc3ovpLSUof9ur\nz3hNPPp0CKQjF40xuQc6FYTHUHMLuMvp78PXuc/mYqQmZ8VOGhU+faGtZ4m+QJly\ndF5dS8U5cwKEF+ptuAUiWSahn6INb9yKn3+FcsW0UQKBgQDb8N4eWFvbgpRo/vxo\nwBN2u2TWubj6clcrq/1a+VR0njC28Can0ogJHhrFhPxVs5D/rugs3HlbyAXJFptY\nV0DZPCwBxGU5P5RbGjXWWEUXjp4ISKQD8WKfVlXNr79TqLdOg2NZBYQAi06Cpo/T\nPV9l7LSG2Tj/9WdvD7W2wvrpaQKBgQDVPjpJN6xh7+sHtSU0mjKvrqigpHbuSQ/o\nXpUaWSIpJffm5QpFPAOcTT5mHZCyllicJQIrfPSY+sH8n+sF03CUqVkV4Q2UqfOf\npFaLDB4P6SQ8iesZyF4VKFrj/cAvRJmp0e5W/DRnFkoEp+8c+nrru2+Dzm9kb7Uq\n0CiltqYAywKBgBtcfrV1to+7Ue0x84KwintV2rifyDRX7yI+tjkQFYKgf1zyyUxN\nc6D2vsvdvGqI+TvlrXqPPwW8/4NBrbeyux2LT8o0fYc+sp0WyKXOu2Gv21caelUH\nPYam/eultn6Y2Z0J2V0kw4Qx0GWOhQv5cZnDdb3k3iNxixmU8b03ynEpAoGBAKEA\n7O0fNe50QRZ+tOq0ihSPYQ55XrqnO3WNBDLynZJH8pbI1CpWF7vJrpVXOUs9rQWo\nA61mGR/wJMtiywaJEHWOL48PbzuR3jno0NcHfSMyOoPi9jlvSWncIFQH4TVPLF5F\n/Rh8L+ytrZE6YpWUoX6e9KGmGgDRPw5mQGpuL4RlAoGADe9n080SXlsUk4nHVjUz\nEfv7EBoBkgOpqb9T1foRfJl46NxmmTOYV3iGIhjwcDskEg284k4iq/gH6EEFyEBc\nVz13jzB1nBgjfezFesVQz7bA/+Wik6HZtxAxVg38BKMt+Q1tYw9wOjbGPqOn++VC\nsR2Sh8e3h3Knd6j1tceRIFU=\n-----END PRIVATE KEY-----\n",
+    client_email: "test-gia-ason@api-test-sheet-161.iam.gserviceaccount.com",
+    client_id: "104867274738950549003",
+    token_uri: "https://oauth2.googleapis.com/token"
+};
+
+// Token Caching
+let cachedAccessToken = null;
+let tokenExpiresAt = 0;
 
 // Configuration & Global State
 const CONFIG = {
+    defaultSheetId: '1eJkfAcu32pMIvI1n2tD2vGGdDpmNBDHPuKE8RgkPNNk',
     particleCount: 4000,
     orbitRadius: 28,
     orbitSpeed: 0.5,
@@ -79,7 +95,95 @@ function showToast(message, type = 'normal') {
 
     setTimeout(() => {
         if (toast.parentNode) toast.parentNode.removeChild(toast);
-    }, 3000);
+    }, 3200);
+}
+
+// Base64URL Helpers for Web Crypto JWT
+function base64UrlEncode(str) {
+    return btoa(unescape(encodeURIComponent(str)))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+}
+
+function arrayBufferToBase64Url(buffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary)
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+}
+
+// Generate Google OAuth2 Access Token using Web Crypto RSA-SHA256
+async function getGoogleAccessToken() {
+    const now = Math.floor(Date.now() / 1000);
+    if (cachedAccessToken && tokenExpiresAt > now + 60) {
+        return cachedAccessToken;
+    }
+
+    try {
+        const pem = SERVICE_ACCOUNT.private_key
+            .replace(/-----BEGIN PRIVATE KEY-----/g, '')
+            .replace(/-----END PRIVATE KEY-----/g, '')
+            .replace(/\s+/g, '');
+        
+        const binaryDer = Uint8Array.from(atob(pem), c => c.charCodeAt(0));
+
+        const cryptoKey = await crypto.subtle.importKey(
+            "pkcs8",
+            binaryDer.buffer,
+            {
+                name: "RSASSA-PKCS1-v1_5",
+                hash: { name: "SHA-256" }
+            },
+            false,
+            ["sign"]
+        );
+
+        const header = { alg: "RS256", typ: "JWT" };
+        const payload = {
+            iss: SERVICE_ACCOUNT.client_email,
+            scope: "https://www.googleapis.com/auth/spreadsheets.readonly",
+            aud: "https://oauth2.googleapis.com/token",
+            exp: now + 3600,
+            iat: now
+        };
+
+        const unsignedToken = base64UrlEncode(JSON.stringify(header)) + "." + base64UrlEncode(JSON.stringify(payload));
+        const signature = await crypto.subtle.sign(
+            "RSASSA-PKCS1-v1_5",
+            cryptoKey,
+            new TextEncoder().encode(unsignedToken)
+        );
+
+        const jwt = unsignedToken + "." + arrayBufferToBase64Url(signature);
+
+        const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+                grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                assertion: jwt
+            })
+        });
+
+        if (!tokenRes.ok) {
+            const errText = await tokenRes.text();
+            throw new Error("Token exchange error: " + errText);
+        }
+
+        const tokenData = await tokenRes.json();
+        cachedAccessToken = tokenData.access_token;
+        tokenExpiresAt = now + (tokenData.expires_in || 3600);
+        return cachedAccessToken;
+    } catch (err) {
+        console.warn("Service Account JWT Error, falling back to public fetch:", err);
+        return null;
+    }
 }
 
 // Convert Google Drive & direct URLs to embeddable image URLs
@@ -87,7 +191,6 @@ function formatImageUrl(url) {
     if (!url || typeof url !== 'string') return '';
     url = url.trim();
 
-    // Check if Google Drive file link
     if (url.includes('drive.google.com')) {
         const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
         if (fileIdMatch && fileIdMatch[1]) {
@@ -104,7 +207,7 @@ function extractSheetId(input) {
     return match ? match[1] : input.trim();
 }
 
-// Fetch Google Sheet Public Data with smart tab fallback
+// Fetch Google Sheet Data via Official Google Sheets API v4 or GViz Fallback
 async function loadGoogleSheetData(sheetIdInput) {
     const sheetId = extractSheetId(sheetIdInput);
     if (!sheetId) {
@@ -112,68 +215,118 @@ async function loadGoogleSheetData(sheetIdInput) {
         return false;
     }
 
-    // Try tab 'thien_ha' first
-    const primaryUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=thien_ha`;
-    // Fallback to default tab if tab name is different
-    const fallbackUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+    let fetchedPhotos = [];
+    let fetchedBadges = [];
+    let loadedSuccessfully = false;
 
-    let data = null;
-
+    // 1. Try Official Google Sheets API v4 with Service Account Token
     try {
-        let response = await fetch(primaryUrl);
-        let text = await response.text();
-        let jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
-
-        if (!jsonMatch || text.includes('INVALID_ARGUMENT') || text.includes('NO_SHEET')) {
-            // Fallback
-            response = await fetch(fallbackUrl);
-            text = await response.text();
-            jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
-        }
-
-        if (!jsonMatch) {
-            throw new Error("Không thể đọc dữ liệu Sheet. Đảm bảo Sheet đã bật quyền xem công khai (Anyone with link can view).");
-        }
-
-        data = JSON.parse(jsonMatch[1]);
-    } catch (err) {
-        console.error("Sheet load error:", err);
-        showToast("Lỗi nạp Google Sheet! Hãy đảm bảo đã Bật Chia Sẻ Công Khai.", "error");
-        return false;
-    }
-
-    if (!data || !data.table || !data.table.rows || data.table.rows.length === 0) {
-        showToast("Không tìm thấy dòng dữ liệu nào trong Sheet!", "error");
-        return false;
-    }
-
-    const rows = data.table.rows;
-    const fetchedPhotos = [];
-    const fetchedBadges = [];
-
-    rows.forEach(row => {
-        if (!row.c) return;
-        const cellA = row.c[0] ? row.c[0].v : null; // Cột A: Link ảnh
-        const cellB = row.c[1] ? row.c[1].v : null; // Cột B: Lời chúc
-        const cellC = row.c[2] ? row.c[2].v : null; // Cột C: Màu sắc (tùy chọn)
-
-        if (cellA && typeof cellA === 'string' && (cellA.startsWith('http') || cellA.startsWith('data:'))) {
-            fetchedPhotos.push(formatImageUrl(cellA));
-        }
-        if (cellB) {
-            fetchedBadges.push({
-                text: String(cellB),
-                color: cellC || "#ff2a85"
+        const token = await getGoogleAccessToken();
+        if (token) {
+            // Get spreadsheet metadata to detect sheet title
+            const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties.title`, {
+                headers: { Authorization: `Bearer ${token}` }
             });
-        }
-    });
 
-    if (fetchedPhotos.length > 0 || fetchedBadges.length > 0) {
+            if (metaRes.ok) {
+                const metaData = await metaRes.json();
+                if (metaData.sheets && metaData.sheets.length > 0) {
+                    let targetSheetTitle = metaData.sheets[0].properties.title;
+                    const thienHaSheet = metaData.sheets.find(s => s.properties.title.toLowerCase() === 'thien_ha');
+                    if (thienHaSheet) targetSheetTitle = thienHaSheet.properties.title;
+
+                    const valuesRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/'${encodeURIComponent(targetSheetTitle)}'!A:C`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+
+                    if (valuesRes.ok) {
+                        const valuesData = await valuesRes.json();
+                        const rows = valuesData.values || [];
+
+                        rows.forEach((row, index) => {
+                            // Skip header row if contains title keywords
+                            if (index === 0 && row[0] && (row[0].toLowerCase().includes('link') || row[0].toLowerCase().includes('ảnh') || row[0].toLowerCase().includes('image'))) {
+                                return;
+                            }
+
+                            const cellA = row[0] || null; // Cột A: Link ảnh
+                            const cellB = row[1] || null; // Cột B: Lời chúc
+                            const cellC = row[2] || null; // Cột C: Màu sắc (tùy chọn)
+
+                            if (cellA && typeof cellA === 'string' && (cellA.startsWith('http') || cellA.startsWith('data:'))) {
+                                fetchedPhotos.push(formatImageUrl(cellA));
+                            }
+                            if (cellB) {
+                                fetchedBadges.push({
+                                    text: String(cellB),
+                                    color: cellC || "#ff2a85"
+                                });
+                            }
+                        });
+
+                        if (fetchedPhotos.length > 0 || fetchedBadges.length > 0) {
+                            loadedSuccessfully = true;
+                        }
+                    }
+                }
+            }
+        }
+    } catch (apiErr) {
+        console.warn("Sheets API v4 error, trying fallback:", apiErr);
+    }
+
+    // 2. Fallback to Google Visualization API (GViz) if needed
+    if (!loadedSuccessfully) {
+        try {
+            const primaryUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=thien_ha`;
+            const fallbackUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+
+            let response = await fetch(primaryUrl);
+            let text = await response.text();
+            let jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
+
+            if (!jsonMatch || text.includes('INVALID_ARGUMENT') || text.includes('NO_SHEET')) {
+                response = await fetch(fallbackUrl);
+                text = await response.text();
+                jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
+            }
+
+            if (jsonMatch) {
+                const data = JSON.parse(jsonMatch[1]);
+                if (data.table && data.table.rows) {
+                    data.table.rows.forEach(row => {
+                        if (!row.c) return;
+                        const cellA = row.c[0] ? row.c[0].v : null;
+                        const cellB = row.c[1] ? row.c[1].v : null;
+                        const cellC = row.c[2] ? row.c[2].v : null;
+
+                        if (cellA && typeof cellA === 'string' && (cellA.startsWith('http') || cellA.startsWith('data:'))) {
+                            fetchedPhotos.push(formatImageUrl(cellA));
+                        }
+                        if (cellB) {
+                            fetchedBadges.push({
+                                text: String(cellB),
+                                color: cellC || "#ff2a85"
+                            });
+                        }
+                    });
+
+                    if (fetchedPhotos.length > 0 || fetchedBadges.length > 0) {
+                        loadedSuccessfully = true;
+                    }
+                }
+            }
+        } catch (gvizErr) {
+            console.error("GViz fallback error:", gvizErr);
+        }
+    }
+
+    if (loadedSuccessfully) {
         updateOrbitWithSheetData(fetchedPhotos, fetchedBadges);
         showToast(`Đã đồng bộ ${fetchedPhotos.length} ảnh và ${fetchedBadges.length} lời chúc! 💖`, "success");
         return true;
     } else {
-        showToast("Không tìm thấy ảnh (Cột A) hoặc chữ (Cột B) hợp lệ.", "error");
+        showToast("Không thể tải dữ liệu! Hãy chia sẻ Sheet với email service account hoặc mở quyền xem công khai.", "error");
         return false;
     }
 }
@@ -231,14 +384,15 @@ window.addEventListener('DOMContentLoaded', () => {
     createStarField();
     createMeteoriteRings();
     
-    // Check URL parameters for ?id=SHEET_ID or ?sheet=SHEET_ID
-    const urlParams = new URLSearchParams(window.location.search);
-    const sheetIdParam = urlParams.get('id') || urlParams.get('sheet');
+    // Initial placeholder items so 3D universe renders immediately
+    initOrbitItems();
 
-    if (sheetIdParam) {
-        loadGoogleSheetData(sheetIdParam);
-    } else {
-        initOrbitItems();
+    // Auto-load Sheet from URL param or default configured Sheet ID
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetSheetId = urlParams.get('id') || urlParams.get('sheet') || CONFIG.defaultSheetId;
+
+    if (targetSheetId) {
+        loadGoogleSheetData(targetSheetId);
     }
 
     initEvents();
@@ -289,7 +443,6 @@ function createSparkleTexture() {
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 64, 64);
 
-    // 4-point star lens flare
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
@@ -573,12 +726,10 @@ function createBadgeTexture(text, bgColor = "#ff2a85") {
     canvas.height = 160;
     const ctx = canvas.getContext('2d');
 
-    // Rounded rectangle background badge
     ctx.fillStyle = 'rgba(15, 8, 20, 0.82)';
     ctx.strokeStyle = bgColor;
     ctx.lineWidth = 6;
     
-    // Draw pill container
     const r = 40;
     ctx.beginPath();
     ctx.moveTo(r, 10);
@@ -594,7 +745,6 @@ function createBadgeTexture(text, bgColor = "#ff2a85") {
     ctx.fill();
     ctx.stroke();
 
-    // Text styling
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 42px "Plus Jakarta Sans", sans-serif';
     ctx.textAlign = 'center';
@@ -618,7 +768,6 @@ function createPhotoTexture(imgSrc, callback) {
         canvas.height = 512;
         const ctx = canvas.getContext('2d');
 
-        // White/Pink Polaroid Style Frame
         ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
         ctx.shadowColor = 'rgba(255, 42, 133, 0.5)';
         ctx.shadowBlur = 20;
@@ -631,7 +780,6 @@ function createPhotoTexture(imgSrc, callback) {
         }
         ctx.fill();
 
-        // Draw Image Inside
         ctx.save();
         ctx.beginPath();
         if (ctx.roundRect) {
@@ -643,7 +791,6 @@ function createPhotoTexture(imgSrc, callback) {
         ctx.drawImage(img, 32, 32, 448, 448);
         ctx.restore();
 
-        // Shiny border line
         ctx.strokeStyle = 'rgba(255, 42, 133, 0.8)';
         ctx.lineWidth = 4;
         ctx.beginPath();
@@ -658,7 +805,6 @@ function createPhotoTexture(imgSrc, callback) {
         callback(texture);
     };
     img.onerror = () => {
-        // Fallback placeholder
         const badgeTex = createBadgeTexture("KỶ NIỆM 💖", "#ff2a85");
         callback(badgeTex);
     };
@@ -673,7 +819,6 @@ function initOrbitItems() {
 
     const totalItems = INITIAL_PHOTOS.length + INITIAL_BADGES.length;
 
-    // Load Photos
     INITIAL_PHOTOS.forEach((src, idx) => {
         createPhotoTexture(src, (texture) => {
             const geometry = new THREE.PlaneGeometry(3.6, 3.6);
@@ -696,7 +841,6 @@ function initOrbitItems() {
         });
     });
 
-    // Load Text Badges
     INITIAL_BADGES.forEach((badge, idx) => {
         const texture = createBadgeTexture(badge.text, badge.color);
         const geometry = new THREE.PlaneGeometry(5.2, 1.6);
@@ -746,7 +890,6 @@ function addCustomPhoto(file) {
             orbitGroup.add(mesh);
             photoMeshes.push(mesh);
 
-            // Pop scale animation
             let s = 0.01;
             const popInterval = setInterval(() => {
                 s += 0.08;
@@ -1001,7 +1144,6 @@ function animate() {
         mesh.position.z = Math.sin(angle) * radius;
         mesh.position.y = mesh.userData.yOffset + Math.sin(time * 1.5 + mesh.userData.angleOffset) * 0.8;
 
-        // Billboarding
         mesh.lookAt(camera.position);
 
         const baseScale = mesh.userData.isBadge ? 1.0 : CONFIG.photoSize;
@@ -1027,7 +1169,6 @@ function animate() {
 
 // UI Event Listeners
 function initEvents() {
-    // Window Resize
     window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
@@ -1067,7 +1208,6 @@ function initEvents() {
                 if (photoModal) photoModal.classList.add('open');
             }
         } else {
-            // Clicked on space: spawn sparkle burst
             const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
             const targetPoint = new THREE.Vector3();
             raycaster.ray.intersectPlane(plane, targetPoint);
@@ -1082,7 +1222,7 @@ function initEvents() {
             const files = Array.from(e.target.files);
             if (files.length > 0) {
                 files.forEach(file => addCustomPhoto(file));
-                uploadInput.value = ''; // Reset so same files can be uploaded again
+                uploadInput.value = '';
             }
         });
     }
@@ -1093,6 +1233,17 @@ function initEvents() {
     const closeSheetModal = document.getElementById('close-sheet-modal');
     const loadSheetBtn = document.getElementById('load-sheet-btn');
     const sheetIdInput = document.getElementById('sheet-id-input');
+    const copySaEmailBtn = document.getElementById('copy-sa-email-btn');
+
+    if (copySaEmailBtn) {
+        copySaEmailBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(SERVICE_ACCOUNT.client_email).then(() => {
+                showToast("Đã sao chép Email Service Account! 📋", "success");
+            }).catch(() => {
+                showToast(SERVICE_ACCOUNT.client_email, "normal");
+            });
+        });
+    }
 
     if (sheetSyncBtn && sheetModal) {
         sheetSyncBtn.addEventListener('click', () => sheetModal.classList.add('open'));
@@ -1113,11 +1264,11 @@ function initEvents() {
                 return;
             }
             loadSheetBtn.disabled = true;
-            loadSheetBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải...';
+            loadSheetBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu API...';
 
             const success = await loadGoogleSheetData(val);
             loadSheetBtn.disabled = false;
-            loadSheetBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> Tải Dữ Liệu Sheet';
+            loadSheetBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Tải Dữ Liệu Qua API';
 
             if (success) {
                 sheetModal.classList.remove('open');
@@ -1211,7 +1362,6 @@ function initEvents() {
                         audioBtn.classList.add('active');
                         showToast("Đang phát nhạc lofi không gian 🎵", "success");
                     }).catch(() => {
-                        // Play Web Audio Ambient Chime
                         startFallbackChimes();
                         isAudioPlaying = true;
                         audioBtn.classList.add('active');

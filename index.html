@@ -166,16 +166,28 @@
     <!-- Google Sheet Sync Modal -->
     <div id="sheet-modal" class="modal">
         <div class="modal-backdrop"></div>
-        <div class="modal-card glass-panel">
+        <div class="modal-card glass-panel" style="max-width: 490px;">
             <button class="modal-close" id="close-sheet-modal"><i class="fa-solid fa-xmark"></i></button>
-            <h3><i class="fa-solid fa-file-csv"></i> Kết Nối Google Sheet</h3>
-            <p>Nhập <b>Google Sheet ID</b> hoặc <b>Đường link Google Sheet</b> của bạn (yêu cầu tab đặt tên <code>thien_ha</code> hoặc trang tính mặc định):</p>
-            <input type="text" id="sheet-id-input" placeholder="Ví dụ: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms">
-            <div class="modal-actions" style="gap: 10px; margin-top: 10px;">
-                <button id="load-sheet-btn" class="btn btn-primary"><i class="fa-solid fa-rotate"></i> Tải Dữ Liệu Sheet</button>
+            <h3><i class="fa-solid fa-table"></i> Kết Nối Google Sheet API</h3>
+            
+            <!-- Service Account Email Box -->
+            <div class="service-account-box">
+                <div class="sa-label"><i class="fa-solid fa-shield-halved"></i> Email Service Account kết nối API:</div>
+                <div class="sa-email-row">
+                    <code id="sa-email-text">test-gia-ason@api-test-sheet-161.iam.gserviceaccount.com</code>
+                    <button id="copy-sa-email-btn" class="btn-copy" title="Sao chép Email API"><i class="fa-regular fa-copy"></i> Sao chép</button>
+                </div>
+                <div class="sa-hint">👉 <b>Cách dùng:</b> Trong Google Sheet, bấm nút <b>Chia sẻ (Share)</b> &rarr; Thêm email trên làm <b>Người xem (Viewer)</b> hoặc Bật chia sẻ liên kết.</div>
             </div>
-            <p style="font-size: 0.75rem; color: #aaa; margin-top: 8px;">
-                💡 <b>Mẹo chia sẻ link:</b> Tạo link chứa ID dạng <code>?id=SHEET_ID_CỦA_BẠN</code> để người khác mở link là tự động xem được luôn!
+
+            <p style="margin-top: 4px;">Nhập <b>Google Sheet ID</b> hoặc <b>Link Google Sheet</b> của bạn:</p>
+            <input type="text" id="sheet-id-input" value="1eJkfAcu32pMIvI1n2tD2vGGdDpmNBDHPuKE8RgkPNNk" placeholder="Ví dụ: 1eJkfAcu32pMIvI1n2tD2vGGdDpmNBDHPuKE8RgkPNNk">
+            
+            <div class="modal-actions" style="gap: 10px; margin-top: 8px;">
+                <button id="load-sheet-btn" class="btn btn-primary"><i class="fa-solid fa-cloud-arrow-down"></i> Tải Dữ Liệu Qua API</button>
+            </div>
+            <p style="font-size: 0.75rem; color: #aaa; margin-top: 6px;">
+                💡 <b>Cấu trúc cột:</b> Cột A = Link ảnh | Cột B = Lời chúc | Cột C = Mã màu (tùy chọn).
             </p>
         </div>
     </div>
