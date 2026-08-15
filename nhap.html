@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bảng Dữ Liệu Sheet Thiên Hà - Cosmos Dashboard</title>
-    <meta name="description" content="Trình quản lý, tải ảnh và cập nhật dữ liệu bảng tính Google Sheet thien_ha.">
+    <meta name="description" content="Trình quản lý và cập nhật dữ liệu bảng tính Google Sheet thien_ha.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -579,7 +579,7 @@
             color: #ffffff;
         }
 
-        /* Upload Box Styling */
+        /* Host Upload Toolbar */
         .upload-section {
             background: rgba(255, 42, 133, 0.04);
             border: 1px dashed rgba(255, 42, 133, 0.4);
@@ -605,63 +605,49 @@
             flex-wrap: wrap;
         }
 
-        .btn-upload-trigger {
-            background: linear-gradient(135deg, rgba(255, 42, 133, 0.2), rgba(157, 78, 221, 0.3));
-            border: 1px solid rgba(255, 42, 133, 0.5);
-            color: #ffffff;
-            padding: 8px 14px;
-            border-radius: var(--radius-sm);
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-
-        .btn-upload-trigger:hover {
-            background: rgba(255, 42, 133, 0.4);
-            border-color: var(--primary);
-        }
-
-        .btn-freeimage-link {
-            background: rgba(255, 255, 255, 0.08);
+        .btn-host-link {
+            background: rgba(255, 255, 255, 0.07);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #ffb3c6;
-            padding: 8px 12px;
+            color: #ffffff;
+            padding: 7px 12px;
             border-radius: var(--radius-sm);
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 600;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            text-decoration: none;
             transition: all 0.2s;
         }
 
-        .btn-freeimage-link:hover {
-            background: rgba(255, 255, 255, 0.16);
-            color: #ffffff;
+        .btn-host-link:hover {
+            background: rgba(255, 42, 133, 0.25);
+            border-color: var(--primary);
+            transform: translateY(-1px);
         }
 
-        .upload-status-text {
-            font-size: 0.8rem;
-            color: #90e0ef;
+        .btn-host-freeimage {
+            background: linear-gradient(135deg, rgba(255, 42, 133, 0.2), rgba(157, 78, 221, 0.3));
+            border-color: rgba(255, 42, 133, 0.5);
+            color: #ffb3c6;
+        }
+
+        .btn-host-freeimage:hover {
+            background: rgba(255, 42, 133, 0.4);
+            color: #ffffff;
         }
 
         .upload-preview-container {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            min-height: 20px;
+            min-height: 10px;
         }
 
         .upload-preview-item {
             position: relative;
-            width: 52px;
-            height: 52px;
+            width: 54px;
+            height: 54px;
             border-radius: 8px;
             overflow: hidden;
             border: 1px solid rgba(255, 255, 255, 0.25);
@@ -798,7 +784,7 @@
                 </div>
                 <div class="brand-text">
                     <h1>Dữ Liệu Sheet Thiên Hà</h1>
-                    <p>Tab <code>thien_ha</code> &bull; Hỗ trợ tải ảnh FreeImage.host & Tải ảnh trực tiếp</p>
+                    <p>Tab <code>thien_ha</code> &bull; Hỗ trợ liên kết ảnh FreeImage.host, Postimages, ImgBB, Google Drive</p>
                 </div>
             </div>
 
@@ -887,27 +873,31 @@
                 <div class="form-group">
                     <label for="new-anh"><i class="fa-solid fa-images"></i> Link Ảnh (Cột B)</label>
                     
-                    <!-- Upload Box -->
                     <div class="upload-section">
                         <div class="upload-actions-bar">
+                            <span style="font-size: 0.83rem; color: #ff9ec6; font-weight: 600;">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Mở trang tải ảnh:
+                            </span>
                             <div class="upload-btn-group">
-                                <label for="new-image-file-input" class="btn-upload-trigger">
-                                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                                    <span>Tải ảnh từ máy tính</span>
-                                </label>
-                                <input type="file" id="new-image-file-input" multiple accept="image/*" style="display: none;">
-
-                                <button type="button" class="btn-freeimage-link" onclick="openFreeImageUploader()">
+                                <button type="button" class="btn-host-link btn-host-freeimage" onclick="openHostUploader('freeimage')">
                                     <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                    <span>Mở FreeImage.host</span>
+                                    <span>FreeImage.host</span>
+                                </button>
+                                <button type="button" class="btn-host-link" onclick="openHostUploader('postimages')">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    <span>Postimages.org</span>
+                                </button>
+                                <button type="button" class="btn-host-link" onclick="openHostUploader('imgbb')">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    <span>ImgBB.com</span>
                                 </button>
                             </div>
-                            <span id="new-upload-status" class="upload-status-text"></span>
                         </div>
+
+                        <textarea id="new-anh" class="form-control" rows="2" placeholder="Dán link ảnh vào đây (nhiều ảnh ngăn cách bằng dấu |)&#10;Hỗ trợ: FreeImage.host (https://iili.io/...), Postimages, ImgBB, Google Drive..."></textarea>
+                        
                         <div id="new-preview-strip" class="upload-preview-container"></div>
                     </div>
-
-                    <textarea id="new-anh" class="form-control" rows="2" placeholder="Dán link ảnh trực tiếp hoặc mã từ FreeImage.host (ngăn cách bằng dấu |)"></textarea>
                 </div>
 
                 <div class="form-group">
@@ -990,27 +980,31 @@
                 <div class="form-group">
                     <label for="edit-anh"><i class="fa-solid fa-images"></i> Link Ảnh (Cột B)</label>
                     
-                    <!-- Upload Box -->
                     <div class="upload-section">
                         <div class="upload-actions-bar">
+                            <span style="font-size: 0.83rem; color: #ff9ec6; font-weight: 600;">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Mở trang tải ảnh:
+                            </span>
                             <div class="upload-btn-group">
-                                <label for="edit-image-file-input" class="btn-upload-trigger">
-                                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                                    <span>Tải thêm ảnh từ máy tính</span>
-                                </label>
-                                <input type="file" id="edit-image-file-input" multiple accept="image/*" style="display: none;">
-
-                                <button type="button" class="btn-freeimage-link" onclick="openFreeImageUploader()">
+                                <button type="button" class="btn-host-link btn-host-freeimage" onclick="openHostUploader('freeimage')">
                                     <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                    <span>Mở FreeImage.host</span>
+                                    <span>FreeImage.host</span>
+                                </button>
+                                <button type="button" class="btn-host-link" onclick="openHostUploader('postimages')">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    <span>Postimages.org</span>
+                                </button>
+                                <button type="button" class="btn-host-link" onclick="openHostUploader('imgbb')">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    <span>ImgBB.com</span>
                                 </button>
                             </div>
-                            <span id="edit-upload-status" class="upload-status-text"></span>
                         </div>
+
+                        <textarea id="edit-anh" class="form-control" rows="2" placeholder="Link ảnh ngăn cách bằng dấu |"></textarea>
+                        
                         <div id="edit-preview-strip" class="upload-preview-container"></div>
                     </div>
-
-                    <textarea id="edit-anh" class="form-control" rows="2" placeholder="Link ảnh ngăn cách bằng dấu |"></textarea>
                 </div>
 
                 <div class="form-group">
@@ -1186,7 +1180,7 @@
             }
         }
 
-        // Smart Format and Clean Image URLs (FreeImage.host, Catbox, Google Drive, BBCode, HTML)
+        // Smart Format and Clean Image URLs (FreeImage.host, Postimages, ImgBB, Google Drive, BBCode, HTML)
         function formatImageUrl(url) {
             if (!url || typeof url !== 'string') return '';
             url = url.trim();
@@ -1236,73 +1230,25 @@
             setTimeout(() => toast.remove(), 2800);
         }
 
-        // Open FreeImage.host in a convenient popup window
-        function openFreeImageUploader() {
-            const w = 820, h = 680;
+        // Open Selected Image Host in a convenient popup window
+        function openHostUploader(type) {
+            const w = 840, h = 680;
             const left = (window.innerWidth - w) / 2;
             const top = (window.innerHeight - h) / 2;
-            window.open('https://freeimage.host/upload', 'FreeImageHost', `width=${w},height=${h},top=${top},left=${left}`);
-            showToast("Tải ảnh trên FreeImage.host xong hãy copy link dán vào ô bên dưới! 📸");
-        }
 
-        // Upload Single Image File via High-Speed Permanent Catbox API with Base64 Fallback
-        async function uploadFileDirect(file) {
-            // Strategy 1: Catbox.moe API (Fast, Free, Permanent Direct Image URL with CORS)
-            try {
-                const formData = new FormData();
-                formData.append('reqtype', 'fileupload');
-                formData.append('fileToUpload', file);
-                const res = await fetch('https://catbox.moe/user/api.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                const text = await res.text();
-                if (text && text.startsWith('http')) {
-                    return text.trim();
-                }
-            } catch (e) {
-                console.warn("Catbox upload fallback:", e);
+            let url = 'https://freeimage.host/upload';
+            let title = 'FreeImage.host';
+
+            if (type === 'postimages') {
+                url = 'https://postimages.org/';
+                title = 'Postimages.org';
+            } else if (type === 'imgbb') {
+                url = 'https://imgbb.com/upload';
+                title = 'ImgBB.com';
             }
 
-            // Strategy 2: Base64 Data URL (Never fails, 100% offline & local support)
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // Handle Multiple File Upload for a Form
-        async function handleImageUploadFlow(fileInput, textareaEl, previewStripEl, statusEl) {
-            const files = Array.from(fileInput.files);
-            if (files.length === 0) return;
-
-            statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang tải 0/${files.length} ảnh...`;
-            fileInput.disabled = true;
-
-            let uploadedCount = 0;
-            let currentUrls = textareaEl.value ? textareaEl.value.split('|').map(s => formatImageUrl(s)).filter(Boolean) : [];
-
-            for (let i = 0; i < files.length; i++) {
-                statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang tải ảnh ${i + 1}/${files.length}...`;
-                try {
-                    const directUrl = await uploadFileDirect(files[i]);
-                    currentUrls.push(directUrl);
-                    uploadedCount++;
-                } catch (err) {
-                    console.error(err);
-                    showToast(`Ảnh "${files[i].name}" lỗi: ${err.message}`, true);
-                }
-            }
-
-            textareaEl.value = currentUrls.join(' | ');
-            renderThumbnailStrip(textareaEl, previewStripEl);
-
-            fileInput.disabled = false;
-            fileInput.value = '';
-            statusEl.innerHTML = `<i class="fa-solid fa-check" style="color: #2ed573;"></i> Đã thêm thành công ${uploadedCount} ảnh!`;
-            setTimeout(() => { statusEl.innerText = ''; }, 3500);
+            window.open(url, 'HostUploadPopup', `width=${w},height=${h},top=${top},left=${left}`);
+            showToast(`Đã mở ${title}: Tải ảnh xong hãy copy link ảnh dán vào ô bên dưới! 📋`);
         }
 
         // Render interactive thumbnail strip for textarea
@@ -1710,7 +1656,7 @@
         });
 
         // ----------------------------------------------------
-        // ADD NEW MODAL & UPLOAD WIRING
+        // ADD NEW MODAL WIRING
         // ----------------------------------------------------
         const addModal = document.getElementById('add-modal');
         const addNewBtn = document.getElementById('add-new-btn');
@@ -1718,10 +1664,8 @@
         const cancelAddBtn = document.getElementById('cancel-add-btn');
         const addRowForm = document.getElementById('add-row-form');
         const submitAddBtn = document.getElementById('submit-add-btn');
-        const newFileInput = document.getElementById('new-image-file-input');
         const newAnhTextarea = document.getElementById('new-anh');
         const newPreviewStrip = document.getElementById('new-preview-strip');
-        const newUploadStatus = document.getElementById('new-upload-status');
 
         if (addNewBtn && addModal) {
             addNewBtn.addEventListener('click', () => {
@@ -1744,14 +1688,7 @@
                 }
             });
 
-            // Handle Direct File Upload on Add
-            if (newFileInput) {
-                newFileInput.addEventListener('change', () => {
-                    handleImageUploadFlow(newFileInput, newAnhTextarea, newPreviewStrip, newUploadStatus);
-                });
-            }
-
-            // Sync thumbnail preview on manual textarea typing
+            // Sync thumbnail preview on manual textarea typing / pasting
             if (newAnhTextarea) {
                 newAnhTextarea.addEventListener('input', () => {
                     renderThumbnailStrip(newAnhTextarea, newPreviewStrip);
@@ -1807,17 +1744,15 @@
         }
 
         // ----------------------------------------------------
-        // EDIT ROW MODAL & UPLOAD WIRING
+        // EDIT ROW MODAL WIRING
         // ----------------------------------------------------
         const editModal = document.getElementById('edit-modal');
         const closeEditModal = document.getElementById('close-edit-modal');
         const cancelEditBtn = document.getElementById('cancel-edit-btn');
         const editRowForm = document.getElementById('edit-row-form');
         const submitEditBtn = document.getElementById('submit-edit-btn');
-        const editFileInput = document.getElementById('edit-image-file-input');
         const editAnhTextarea = document.getElementById('edit-anh');
         const editPreviewStrip = document.getElementById('edit-preview-strip');
-        const editUploadStatus = document.getElementById('edit-upload-status');
 
         function openEditModal(index) {
             const item = allRowsData[index];
@@ -1849,13 +1784,6 @@
                     hideEditModal();
                 }
             });
-
-            // Handle Direct File Upload on Edit
-            if (editFileInput) {
-                editFileInput.addEventListener('change', () => {
-                    handleImageUploadFlow(editFileInput, editAnhTextarea, editPreviewStrip, editUploadStatus);
-                });
-            }
 
             // Sync thumbnail preview on edit manual typing
             if (editAnhTextarea) {
