@@ -4,13 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bảng Dữ Liệu Sheet Thiên Hà - Cosmos Dashboard</title>
-    <meta name="description" content="Trình quản lý và cập nhật dữ liệu bảng tính Google Sheet thien_ha.">
+    <meta name="description" content="Trình quản lý và cập nhật dữ liệu bảng tính Google Sheet thien_ha với tích hợp FreeImage.host API.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Official FreeImage.host Upload SDK (PUP Plugin) -->
+    <script async src="https://freeimage.host/sdk/pup.js" data-url="https://freeimage.host/upload" data-auto-insert="direct-links"></script>
     <style>
         :root {
             --bg-dark: #07040d;
@@ -390,6 +392,16 @@
             box-shadow: 0 4px 15px rgba(255, 42, 133, 0.5);
         }
 
+        .btn-edit {
+            background: linear-gradient(135deg, #9d4edd, #00b4d8);
+            color: #ffffff;
+        }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(157, 78, 221, 0.5);
+        }
+
         .btn-copy {
             background: rgba(255, 255, 255, 0.08);
             color: var(--text-muted);
@@ -609,9 +621,9 @@
             background: rgba(255, 255, 255, 0.07);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: #ffffff;
-            padding: 7px 12px;
+            padding: 8px 14px;
             border-radius: var(--radius-sm);
-            font-size: 0.82rem;
+            font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
             display: inline-flex;
@@ -627,14 +639,16 @@
         }
 
         .btn-host-freeimage {
-            background: linear-gradient(135deg, rgba(255, 42, 133, 0.2), rgba(157, 78, 221, 0.3));
-            border-color: rgba(255, 42, 133, 0.5);
+            background: linear-gradient(135deg, rgba(255, 42, 133, 0.25), rgba(157, 78, 221, 0.35));
+            border-color: rgba(255, 42, 133, 0.6);
             color: #ffb3c6;
+            box-shadow: 0 4px 12px rgba(255, 42, 133, 0.25);
         }
 
         .btn-host-freeimage:hover {
-            background: rgba(255, 42, 133, 0.4);
+            background: linear-gradient(135deg, #ff2a85, #9d4edd);
             color: #ffffff;
+            box-shadow: 0 6px 18px rgba(255, 42, 133, 0.5);
         }
 
         .upload-preview-container {
@@ -784,7 +798,7 @@
                 </div>
                 <div class="brand-text">
                     <h1>Dữ Liệu Sheet Thiên Hà</h1>
-                    <p>Tab <code>thien_ha</code> &bull; Hỗ trợ liên kết ảnh FreeImage.host, Postimages, ImgBB, Google Drive</p>
+                    <p>Tab <code>thien_ha</code> &bull; Tích hợp FreeImage.host API Tải & Đồng bộ ảnh</p>
                 </div>
             </div>
 
@@ -876,25 +890,21 @@
                     <div class="upload-section">
                         <div class="upload-actions-bar">
                             <span style="font-size: 0.83rem; color: #ff9ec6; font-weight: 600;">
-                                <i class="fa-solid fa-cloud-arrow-up"></i> Mở trang tải ảnh:
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Tải ảnh qua FreeImage.host API:
                             </span>
                             <div class="upload-btn-group">
-                                <button type="button" class="btn-host-link btn-host-freeimage" onclick="openHostUploader('freeimage')">
-                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                    <span>FreeImage.host</span>
+                                <button type="button" class="btn-host-link btn-host-freeimage" onclick="openHostUploader('freeimage', 'new-anh')">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    <span>Tải Lên FreeImage.host API</span>
                                 </button>
-                                <button type="button" class="btn-host-link" onclick="openHostUploader('postimages')">
+                                <button type="button" class="btn-host-link" onclick="openHostUploader('postimages', 'new-anh')">
                                     <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                    <span>Postimages.org</span>
-                                </button>
-                                <button type="button" class="btn-host-link" onclick="openHostUploader('imgbb')">
-                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                    <span>ImgBB.com</span>
+                                    <span>Postimages</span>
                                 </button>
                             </div>
                         </div>
 
-                        <textarea id="new-anh" class="form-control" rows="2" placeholder="Dán link ảnh vào đây (nhiều ảnh ngăn cách bằng dấu |)&#10;Hỗ trợ: FreeImage.host (https://iili.io/...), Postimages, ImgBB, Google Drive..."></textarea>
+                        <textarea id="new-anh" class="form-control" rows="2" placeholder="Tải ảnh lên FreeImage.host rồi link sẽ tự động chèn vào đây (hoặc dán nhiều link ngăn cách bằng dấu |)"></textarea>
                         
                         <div id="new-preview-strip" class="upload-preview-container"></div>
                     </div>
@@ -983,20 +993,16 @@
                     <div class="upload-section">
                         <div class="upload-actions-bar">
                             <span style="font-size: 0.83rem; color: #ff9ec6; font-weight: 600;">
-                                <i class="fa-solid fa-cloud-arrow-up"></i> Mở trang tải ảnh:
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Tải ảnh qua FreeImage.host API:
                             </span>
                             <div class="upload-btn-group">
-                                <button type="button" class="btn-host-link btn-host-freeimage" onclick="openHostUploader('freeimage')">
-                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                    <span>FreeImage.host</span>
+                                <button type="button" class="btn-host-link btn-host-freeimage" onclick="openHostUploader('freeimage', 'edit-anh')">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    <span>Tải Lên FreeImage.host API</span>
                                 </button>
-                                <button type="button" class="btn-host-link" onclick="openHostUploader('postimages')">
+                                <button type="button" class="btn-host-link" onclick="openHostUploader('postimages', 'edit-anh')">
                                     <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                    <span>Postimages.org</span>
-                                </button>
-                                <button type="button" class="btn-host-link" onclick="openHostUploader('imgbb')">
-                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                    <span>ImgBB.com</span>
+                                    <span>Postimages</span>
                                 </button>
                             </div>
                         </div>
@@ -1077,6 +1083,7 @@
     <script>
         const SHEET_ID = '1eJkfAcu32pMIvI1n2tD2vGGdDpmNBDHPuKE8RgkPNNk';
         let allRowsData = [];
+        let activeTargetTextareaId = 'new-anh';
 
         // Google Cloud Service Account API Configuration
         const SERVICE_ACCOUNT = {
@@ -1231,25 +1238,51 @@
         }
 
         // Open Selected Image Host in a convenient popup window
-        function openHostUploader(type) {
+        function openHostUploader(type, targetTextareaId) {
+            activeTargetTextareaId = targetTextareaId;
             const w = 840, h = 680;
             const left = (window.innerWidth - w) / 2;
             const top = (window.innerHeight - h) / 2;
 
             let url = 'https://freeimage.host/upload';
-            let title = 'FreeImage.host';
+            let title = 'FreeImage.host API';
 
             if (type === 'postimages') {
                 url = 'https://postimages.org/';
                 title = 'Postimages.org';
-            } else if (type === 'imgbb') {
-                url = 'https://imgbb.com/upload';
-                title = 'ImgBB.com';
             }
 
             window.open(url, 'HostUploadPopup', `width=${w},height=${h},top=${top},left=${left}`);
-            showToast(`Đã mở ${title}: Tải ảnh xong hãy copy link ảnh dán vào ô bên dưới! 📋`);
+            showToast(`Đã mở ${title}: Tải ảnh xong link sẽ tự động đồng bộ vào ô! 📸`);
         }
+
+        // Automatically catch FreeImage.host API postMessage event when image upload completes
+        window.addEventListener('message', function(event) {
+            if (!event || !event.data) return;
+
+            let msg = '';
+            if (typeof event.data === 'string') {
+                msg = event.data;
+            } else if (typeof event.data === 'object' && event.data.message) {
+                msg = String(event.data.message);
+            }
+
+            if (msg && (msg.includes('http') || msg.includes('[img]'))) {
+                const targetTextarea = document.getElementById(activeTargetTextareaId);
+                const targetStrip = activeTargetTextareaId === 'new-anh' ? document.getElementById('new-preview-strip') : document.getElementById('edit-preview-strip');
+
+                if (targetTextarea && targetStrip) {
+                    const cleanUrl = formatImageUrl(msg);
+                    let currentList = targetTextarea.value ? targetTextarea.value.split('|').map(s => s.trim()).filter(Boolean) : [];
+                    if (!currentList.includes(cleanUrl)) {
+                        currentList.push(cleanUrl);
+                        targetTextarea.value = currentList.join(' | ');
+                        renderThumbnailStrip(targetTextarea, targetStrip);
+                        showToast(`Đã nhận ảnh mới từ FreeImage.host! 💖`);
+                    }
+                }
+            }
+        });
 
         // Render interactive thumbnail strip for textarea
         function renderThumbnailStrip(textareaEl, containerEl) {
@@ -1669,6 +1702,7 @@
 
         if (addNewBtn && addModal) {
             addNewBtn.addEventListener('click', () => {
+                activeTargetTextareaId = 'new-anh';
                 addModal.classList.add('open');
                 const idInput = document.getElementById('new-id');
                 if (idInput) idInput.focus();
@@ -1758,6 +1792,7 @@
             const item = allRowsData[index];
             if (!item) return;
 
+            activeTargetTextareaId = 'edit-anh';
             document.getElementById('edit-row-number').value = item.rowNumber;
             document.getElementById('edit-id').value = item.id;
             editAnhTextarea.value = item.anh;
