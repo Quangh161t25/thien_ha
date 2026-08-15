@@ -409,6 +409,174 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* Modals Common */
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.open {
+            display: flex;
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(7, 4, 13, 0.82);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .modal-card {
+            position: relative;
+            background: rgba(22, 12, 34, 0.95);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 650px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px var(--primary-glow);
+            animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 2;
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.92); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .modal-title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modal-icon {
+            font-size: 1.4rem;
+            color: var(--primary);
+        }
+
+        .modal-title-group h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .btn-close-modal {
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            color: var(--text-muted);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-close-modal:hover {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .modal-body {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #ff9ec6;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .req {
+            color: #ff4757;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-sm);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(255, 42, 133, 0.4);
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .form-hint {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .form-hint code {
+            color: #ffb3c6;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        .form-row-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 580px) {
+            .form-row-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        select.form-control option {
+            background: #190c28;
+            color: #ffffff;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
         /* Image Preview Modal */
         .preview-modal {
             position: fixed;
@@ -418,7 +586,7 @@
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 999;
+            z-index: 1100;
             padding: 20px;
         }
 
@@ -481,7 +649,7 @@
             align-items: center;
             gap: 10px;
             font-size: 0.9rem;
-            z-index: 1000;
+            z-index: 1200;
             animation: fadeIn 0.3s ease;
         }
 
@@ -506,11 +674,15 @@
             </div>
 
             <div class="actions-section">
-                <button id="refresh-btn" class="btn btn-secondary">
+                <button id="add-new-btn" class="btn btn-primary" title="Thêm dòng mới vào Google Sheet">
+                    <i class="fa-solid fa-circle-plus"></i>
+                    <span>Thêm mới</span>
+                </button>
+                <button id="refresh-btn" class="btn btn-secondary" title="Tải lại bảng tính">
                     <i class="fa-solid fa-arrows-rotate"></i>
                     <span>Làm mới</span>
                 </button>
-                <a href="index.html" target="_blank" class="btn btn-primary">
+                <a href="index.html" target="_blank" class="btn btn-secondary" title="Mở mô hình 3D">
                     <i class="fa-solid fa-atom"></i>
                     <span>Mở Vũ Trụ 3D</span>
                 </a>
@@ -564,10 +736,91 @@
         </div>
     </div>
 
+    <!-- Add New Row Modal Popup -->
+    <div id="add-modal" class="modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <i class="fa-solid fa-wand-magic-sparkles modal-icon"></i>
+                    <h2>Thêm Dữ Liệu Mới Vào Sheet</h2>
+                </div>
+                <button id="close-add-modal" class="btn-close-modal" type="button"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form id="add-row-form" class="modal-body">
+                <div class="form-group">
+                    <label for="new-id"><i class="fa-solid fa-key"></i> ID Người Nhận (Cột A) <span class="req">*</span></label>
+                    <input type="text" id="new-id" class="form-control" placeholder="Ví dụ: linh, hoang_nam, 01..." required autocomplete="off">
+                    <small class="form-hint">Dùng để mở link vũ trụ riêng: <code>index.html?id=ID</code></small>
+                </div>
+
+                <div class="form-group">
+                    <label for="new-anh"><i class="fa-solid fa-images"></i> Link Ảnh (Cột B)</label>
+                    <textarea id="new-anh" class="form-control" rows="3" placeholder="Dán link ảnh trực tiếp hoặc Google Drive (nhiều ảnh ngăn cách bằng dấu |)&#10;Ví dụ: https://link1.jpg | https://link2.jpg"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="new-text"><i class="fa-solid fa-comment-dots"></i> Câu Chúc / Lời Nhắn (Cột C)</label>
+                    <textarea id="new-text" class="form-control" rows="2" placeholder="Nhập lời chúc (nhiều câu ngăn cách bằng dấu |)&#10;Ví dụ: Anh Yêu Em 💖 | Kỷ Niệm 1 Năm | Mãi Bên Nhau"></textarea>
+                </div>
+
+                <div class="form-row-grid">
+                    <div class="form-group">
+                        <label for="new-shape"><i class="fa-solid fa-cube"></i> Hình Dạng 3D (Cột D)</label>
+                        <select id="new-shape" class="form-control">
+                            <option value="sphere">Quả Cầu 3D (sphere)</option>
+                            <option value="heart">Trái Tim 3D (heart)</option>
+                            <option value="spiral">Ngân Hà 3D (spiral)</option>
+                            <option value="saturn">Thổ Tinh 3D (saturn)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new-color"><i class="fa-solid fa-palette"></i> Màu Sắc (Cột E)</label>
+                        <select id="new-color" class="form-control">
+                            <option value="pink">Hồng Ngọt Ngào (pink)</option>
+                            <option value="gold">Vàng Hoàng Kim (gold)</option>
+                            <option value="purple">Tím Huyền Bí (purple)</option>
+                            <option value="cyan">Xanh Thiên Thanh (cyan)</option>
+                            <option value="white">Trắng Tinh Khôi (white)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row-grid">
+                    <div class="form-group">
+                        <label for="new-belt"><i class="fa-solid fa-circle-notch"></i> Vành Đai Thiên Thạch (Cột F)</label>
+                        <select id="new-belt" class="form-control">
+                            <option value="1">1 Vành đai ngang (1)</option>
+                            <option value="2">2 Vành đai chéo (2)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new-dir"><i class="fa-solid fa-rotate"></i> Chiều Quay (Cột G)</label>
+                        <select id="new-dir" class="form-control">
+                            <option value="reverse">Ngược chiều ảnh (reverse)</option>
+                            <option value="same">Cùng chiều ảnh (same)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" id="cancel-add-btn" class="btn btn-secondary">Hủy bỏ</button>
+                    <button type="submit" id="submit-add-btn" class="btn btn-primary">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span>Lưu Vào Google Sheet</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Image Preview Modal -->
     <div id="preview-modal" class="preview-modal">
         <div class="preview-content">
-            <button id="close-preview" class="close-preview">
+            <button id="close-preview" class="close-preview" type="button">
                 <i class="fa-solid fa-xmark"></i>
             </button>
             <img id="preview-img" src="" alt="Ảnh xem trước">
@@ -612,7 +865,7 @@
                 .replace(/=+$/, '');
         }
 
-        // Generate Google OAuth2 Access Token using Web Crypto RSA-SHA256
+        // Generate Google OAuth2 Access Token using Web Crypto RSA-SHA256 (Read/Write Scope)
         async function getGoogleAccessToken() {
             const now = Math.floor(Date.now() / 1000);
             if (cachedAccessToken && tokenExpiresAt > now + 60) {
@@ -641,7 +894,7 @@
                 const header = { alg: "RS256", typ: "JWT" };
                 const payload = {
                     iss: SERVICE_ACCOUNT.client_email,
-                    scope: "https://www.googleapis.com/auth/spreadsheets.readonly",
+                    scope: "https://www.googleapis.com/auth/spreadsheets",
                     aud: "https://oauth2.googleapis.com/token",
                     exp: now + 3600,
                     iat: now
@@ -694,16 +947,17 @@
         }
 
         // Show quick toast notification
-        function showToast(msg) {
+        function showToast(msg, isError = false) {
             const existing = document.querySelector('.toast');
             if (existing) existing.remove();
 
             const toast = document.createElement('div');
             toast.className = 'toast';
-            toast.innerHTML = `<i class="fa-solid fa-circle-check" style="color: #ff2a85;"></i> <span>${msg}</span>`;
+            if (isError) toast.style.borderColor = '#ff4757';
+            toast.innerHTML = `<i class="fa-solid ${isError ? 'fa-circle-exclamation' : 'fa-circle-check'}" style="color: ${isError ? '#ff4757' : '#ff2a85'};"></i> <span>${msg}</span>`;
             document.body.appendChild(toast);
 
-            setTimeout(() => toast.remove(), 2500);
+            setTimeout(() => toast.remove(), 2800);
         }
 
         // Fetch via Google Sheets API v4 (Service Account)
@@ -837,6 +1091,52 @@
                 console.error("Lỗi tải dữ liệu:", err);
                 loader.innerHTML = `<i class="fa-solid fa-circle-exclamation" style="color: #ff4757; font-size: 2.2rem; margin-bottom: 10px;"></i><p>Không thể kết nối với Google Sheet. Vui lòng kiểm tra quyền chia sẻ!</p>`;
             }
+        }
+
+        // Append New Row to Google Sheet via Service Account API
+        async function appendRowToGoogleSheet(rowData) {
+            const token = await getGoogleAccessToken();
+            if (!token) throw new Error("Không thể lấy mã xác thực Google API");
+
+            const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets.properties.title`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!metaRes.ok) throw new Error("Không thể đọc thông tin Sheet");
+
+            const metaData = await metaRes.json();
+            let targetSheetTitle = metaData.sheets[0].properties.title;
+            const thienHaSheet = metaData.sheets.find(s => s.properties.title.toLowerCase() === 'thien_ha');
+            if (thienHaSheet) targetSheetTitle = thienHaSheet.properties.title;
+
+            const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/'${encodeURIComponent(targetSheetTitle)}'!A:G:append?valueInputOption=USER_ENTERED`;
+
+            const response = await fetch(appendUrl, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    values: [
+                        [
+                            rowData.id,
+                            rowData.anh,
+                            rowData.cau_text,
+                            rowData.hinh_dang,
+                            rowData.mau_sac,
+                            rowData.vanh_dai,
+                            rowData.chieu_quay
+                        ]
+                    ]
+                })
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error("Lỗi khi thêm dòng vào Sheet: " + errText);
+            }
+
+            return await response.json();
         }
 
         // Render Table Rows
@@ -986,6 +1286,81 @@
 
             renderTable(filtered);
         });
+
+        // Add Modal Event Listeners
+        const addModal = document.getElementById('add-modal');
+        const addNewBtn = document.getElementById('add-new-btn');
+        const closeAddModal = document.getElementById('close-add-modal');
+        const cancelAddBtn = document.getElementById('cancel-add-btn');
+        const addRowForm = document.getElementById('add-row-form');
+        const submitAddBtn = document.getElementById('submit-add-btn');
+
+        if (addNewBtn && addModal) {
+            addNewBtn.addEventListener('click', () => {
+                addModal.classList.add('open');
+                const idInput = document.getElementById('new-id');
+                if (idInput) idInput.focus();
+            });
+
+            const hideAddModal = () => {
+                addModal.classList.remove('open');
+            };
+
+            if (closeAddModal) closeAddModal.addEventListener('click', hideAddModal);
+            if (cancelAddBtn) cancelAddBtn.addEventListener('click', hideAddModal);
+
+            addModal.addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal-backdrop') || e.target === addModal) {
+                    hideAddModal();
+                }
+            });
+
+            // Form Submit: Append to Google Sheet
+            if (addRowForm) {
+                addRowForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const newId = document.getElementById('new-id').value.trim();
+                    const newAnh = document.getElementById('new-anh').value.trim();
+                    const newText = document.getElementById('new-text').value.trim();
+                    const newShape = document.getElementById('new-shape').value;
+                    const newColor = document.getElementById('new-color').value;
+                    const newBelt = document.getElementById('new-belt').value;
+                    const newDir = document.getElementById('new-dir').value;
+
+                    if (!newId) {
+                        showToast("Vui lòng nhập ID người nhận!", true);
+                        return;
+                    }
+
+                    submitAddBtn.disabled = true;
+                    submitAddBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang lưu vào Sheet...</span>';
+
+                    try {
+                        await appendRowToGoogleSheet({
+                            id: newId,
+                            anh: newAnh,
+                            cau_text: newText,
+                            hinh_dang: newShape,
+                            mau_sac: newColor,
+                            vanh_dai: newBelt,
+                            chieu_quay: newDir
+                        });
+
+                        showToast(`Đã thêm thành công ID "${newId}" vào Google Sheet! 💖`);
+                        addRowForm.reset();
+                        hideAddModal();
+                        await fetchSheetData();
+                    } catch (err) {
+                        console.error(err);
+                        showToast("Lỗi khi thêm: " + (err.message || "Kiểm tra lại quyền"), true);
+                    } finally {
+                        submitAddBtn.disabled = false;
+                        submitAddBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> <span>Lưu Vào Google Sheet</span>';
+                    }
+                });
+            }
+        }
 
         // Refresh Button
         document.getElementById('refresh-btn').addEventListener('click', fetchSheetData);
