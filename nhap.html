@@ -578,6 +578,108 @@
         const SHEET_ID = '1eJkfAcu32pMIvI1n2tD2vGGdDpmNBDHPuKE8RgkPNNk';
         let allRowsData = [];
 
+        // Google Cloud Service Account API Configuration
+        const SERVICE_ACCOUNT = {
+            type: "service_account",
+            project_id: "cty-lnk-161",
+            private_key_id: "8b79277cbe4d9b5a7b8254a0961a5d4932283388",
+            private_key: "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC3NN84hLTkQPZd\nLj7niXZTICq7nHsuTn3J6r2Paq12m70/lYSmrwh1i0EStr9bO19QM8cevGlslwGr\nWSVOLJlc6+w1HGPKvRXtA41kYV9MYIvpzIPQtkFE7Hxq71QyBARcv39Lfzze6Ioj\n3G8VBvAKFLAnCUr97GHRv+KbCTFxPZupd3PEB+xS5ZUlzdBCEZvDid3iXaaEJJ+l\nTd1apAGQHjtnDTLOkiTa8zf7X5ebALwnI9MziOdN8VyprHXGhkachPbKyrG0QwEs\n2jtiI6Y5ULsBPjNefoavH8MKU5DEAT9h0fZ7KfsKYVMDuXqmEKBs0D3B4Z6aDZQW\nwT2dDRZDAgMBAAECggEAEIuVoSzZVuFhaz1GI9ji0IacjvO50cIq7M8Zrj4/F756\nEw6PIhKENafAb7U4INm2AnzUMO8CqL9Jpxs85qUM3W4JysSByqLUiRW2184amIyb\nj7jCXfLBTQn8AbHgrUepl5d/vBmFYMgon/mqjbNiGDb4FZgEQSkie5o6fi/dWp5d\nNahbZl+WTOB/znhAfKh/zferHNxldR/ERmwOubZUerkqysWiBigc3ovpLSUof9ur\nz3hNPPp0CKQjF40xuQc6FYTHUHMLuMvp78PXuc/mYqQmZ8VOGhU+faGtZ4m+QJly\ndF5dS8U5cwKEF+ptuAUiWSahn6INb9yKn3+FcsW0UQKBgQDb8N4eWFvbgpRo/vxo\nwBN2u2TWubj6clcrq/1a+VR0njC28Can0ogJHhrFhPxVs5D/rugs3HlbyAXJFptY\nV0DZPCwBxGU5P5RbGjXWWEUXjp4ISKQD8WKfVlXNr79TqLdOg2NZBYQAi06Cpo/T\nPV9l7LSG2Tj/9WdvD7W2wvrpaQKBgQDVPjpJN6xh7+sHtSU0mjKvrqigpHbuSQ/o\nXpUaWSIpJffm5QpFPAOcTT5mHZCyllicJQIrfPSY+sH8n+sF03CUqVkV4Q2UqfOf\npFaLDB4P6SQ8iesZyF4VKFrj/cAvRJmp0e5W/DRnFkoEp+8c+nrru2+Dzm9kb7Uq\n0CiltqYAywKBgBtcfrV1to+7Ue0x84KwintV2rifyDRX7yI+tjkQFYKgf1zyyUxN\nc6D2vsvdvGqI+TvlrXqPPwW8/4NBrbeyux2LT8o0fYc+sp0WyKXOu2Gv21caelUH\nPYam/eultn6Y2Z0J2V0kw4Qx0GWOhQv5cZnDdb3k3iNxixmU8b03ynEpAoGBAKEA\n7O0fNe50QRZ+tOq0ihSPYQ55XrqnO3WNBDLynZJH8pbI1CpWF7vJrpVXOUs9rQWo\nA61mGR/wJMtiywaJEHWOL48PbzuR3jno0NcHfSMyOoPi9jlvSWncIFQH4TVPLF5F\n/Rh8L+ytrZE6YpWUoX6e9KGmGgDRPw5mQGpuL4RlAoGADe9n080SXlsUk4nHVjUz\nEfv7EBoBkgOpqb9T1foRfJl46NxmmTOYV3iGIhjwcDskEg284k4iq/gH6EEFyEBc\nVz13jzB1nBgjfezFesVQz7bA/+Wik6HZtxAxVg38BKMt+Q1tYw9wOjbGPqOn++VC\nsR2Sh8e3h3Knd6j1tceRIFU=\n-----END PRIVATE KEY-----\n",
+            client_email: "test-gia-ason@api-test-sheet-161.iam.gserviceaccount.com",
+            client_id: "104867274738950549003",
+            token_uri: "https://oauth2.googleapis.com/token"
+        };
+
+        let cachedAccessToken = null;
+        let tokenExpiresAt = 0;
+
+        // Base64URL Helpers for Web Crypto JWT
+        function base64UrlEncode(str) {
+            return btoa(unescape(encodeURIComponent(str)))
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/, '');
+        }
+
+        function arrayBufferToBase64Url(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary)
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/, '');
+        }
+
+        // Generate Google OAuth2 Access Token using Web Crypto RSA-SHA256
+        async function getGoogleAccessToken() {
+            const now = Math.floor(Date.now() / 1000);
+            if (cachedAccessToken && tokenExpiresAt > now + 60) {
+                return cachedAccessToken;
+            }
+
+            try {
+                const pem = SERVICE_ACCOUNT.private_key
+                    .replace(/-----BEGIN PRIVATE KEY-----/g, '')
+                    .replace(/-----END PRIVATE KEY-----/g, '')
+                    .replace(/\s+/g, '');
+                
+                const binaryDer = Uint8Array.from(atob(pem), c => c.charCodeAt(0));
+
+                const cryptoKey = await crypto.subtle.importKey(
+                    "pkcs8",
+                    binaryDer.buffer,
+                    {
+                        name: "RSASSA-PKCS1-v1_5",
+                        hash: { name: "SHA-256" }
+                    },
+                    false,
+                    ["sign"]
+                );
+
+                const header = { alg: "RS256", typ: "JWT" };
+                const payload = {
+                    iss: SERVICE_ACCOUNT.client_email,
+                    scope: "https://www.googleapis.com/auth/spreadsheets.readonly",
+                    aud: "https://oauth2.googleapis.com/token",
+                    exp: now + 3600,
+                    iat: now
+                };
+
+                const unsignedToken = base64UrlEncode(JSON.stringify(header)) + "." + base64UrlEncode(JSON.stringify(payload));
+                const signature = await crypto.subtle.sign(
+                    "RSASSA-PKCS1-v1_5",
+                    cryptoKey,
+                    new TextEncoder().encode(unsignedToken)
+                );
+
+                const jwt = unsignedToken + "." + arrayBufferToBase64Url(signature);
+
+                const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: new URLSearchParams({
+                        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                        assertion: jwt
+                    })
+                });
+
+                if (!tokenRes.ok) {
+                    const errText = await tokenRes.text();
+                    throw new Error("Token exchange error: " + errText);
+                }
+
+                const tokenData = await tokenRes.json();
+                cachedAccessToken = tokenData.access_token;
+                tokenExpiresAt = now + (tokenData.expires_in || 3600);
+                return cachedAccessToken;
+            } catch (err) {
+                console.warn("Service Account JWT Error:", err);
+                return null;
+            }
+        }
+
         // Format Image URLs (Drive thumbnail conversion)
         function formatImageUrl(url) {
             if (!url || typeof url !== 'string') return '';
@@ -604,6 +706,114 @@
             setTimeout(() => toast.remove(), 2500);
         }
 
+        // Fetch via Google Sheets API v4 (Service Account)
+        async function fetchServiceAccountRows() {
+            const token = await getGoogleAccessToken();
+            if (!token) throw new Error("No Google token");
+
+            const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets.properties.title`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!metaRes.ok) throw new Error("Meta error");
+
+            const metaData = await metaRes.json();
+            let targetSheetTitle = metaData.sheets[0].properties.title;
+            const thienHaSheet = metaData.sheets.find(s => s.properties.title.toLowerCase() === 'thien_ha');
+            if (thienHaSheet) targetSheetTitle = thienHaSheet.properties.title;
+
+            const valuesRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/'${encodeURIComponent(targetSheetTitle)}'!A:G`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!valuesRes.ok) throw new Error("Values error");
+
+            const valuesData = await valuesRes.json();
+            const rows = valuesData.values || [];
+            const parsedRows = [];
+
+            rows.forEach((row, idx) => {
+                if (idx === 0) {
+                    const col0 = String(row[0] || '').toLowerCase().trim();
+                    const col1 = String(row[1] || '').toLowerCase().trim();
+                    if (col0 === 'id' || col1.includes('anh') || col1.includes('image')) return;
+                }
+
+                const cellA = row[0] ? String(row[0]).trim() : '';
+                const cellB = row[1] ? String(row[1]).trim() : '';
+                const cellC = row[2] ? String(row[2]).trim() : '';
+                const cellD = row[3] ? String(row[3]).trim() : 'sphere';
+                const cellE = row[4] ? String(row[4]).trim() : 'pink';
+                const cellF = row[5] ? String(row[5]).trim() : '1';
+                const cellG = row[6] ? String(row[6]).trim() : 'reverse';
+
+                if (cellA || cellB || cellC) {
+                    parsedRows.push({
+                        id: cellA,
+                        anh: cellB,
+                        cau_text: cellC,
+                        hinh_dang: cellD,
+                        mau_sac: cellE,
+                        vanh_dai: cellF,
+                        chieu_quay: cellG
+                    });
+                }
+            });
+
+            return parsedRows;
+        }
+
+        // Fetch via Google Visualization API (GViz)
+        async function fetchGvizRows() {
+            const primaryUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=thien_ha&t=${Date.now()}`;
+            const fallbackUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&t=${Date.now()}`;
+
+            let response = await fetch(primaryUrl);
+            let text = await response.text();
+            let jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
+
+            if (!jsonMatch || text.includes('INVALID_ARGUMENT') || text.includes('NO_SHEET')) {
+                response = await fetch(fallbackUrl);
+                text = await response.text();
+                jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
+            }
+
+            if (!jsonMatch) throw new Error("GViz parse error");
+
+            const data = JSON.parse(jsonMatch[1]);
+            const rows = data.table.rows || [];
+            const parsedRows = [];
+
+            rows.forEach((row, idx) => {
+                if (!row.c) return;
+                const cellA = row.c[0] ? (row.c[0].v !== undefined ? row.c[0].v : row.c[0].f) : null;
+                const cellB = row.c[1] ? (row.c[1].v !== undefined ? row.c[1].v : row.c[1].f) : null;
+                const cellC = row.c[2] ? (row.c[2].v !== undefined ? row.c[2].v : row.c[2].f) : null;
+                const cellD = row.c[3] ? (row.c[3].v !== undefined ? row.c[3].v : row.c[3].f) : null;
+                const cellE = row.c[4] ? (row.c[4].v !== undefined ? row.c[4].v : row.c[4].f) : null;
+                const cellF = row.c[5] ? (row.c[5].v !== undefined ? row.c[5].v : row.c[5].f) : null;
+                const cellG = row.c[6] ? (row.c[6].v !== undefined ? row.c[6].v : row.c[6].f) : null;
+
+                if (idx === 0) {
+                    const strA = String(cellA || '').toLowerCase().trim();
+                    const strB = String(cellB || '').toLowerCase().trim();
+                    if (strA === 'id' || strB.includes('anh') || strB.includes('image')) return;
+                }
+
+                if (cellA || cellB || cellC) {
+                    parsedRows.push({
+                        id: cellA ? String(cellA).trim() : '',
+                        anh: cellB ? String(cellB).trim() : '',
+                        cau_text: cellC ? String(cellC).trim() : '',
+                        hinh_dang: cellD ? String(cellD).trim() : 'sphere',
+                        mau_sac: cellE ? String(cellE).trim() : 'pink',
+                        vanh_dai: cellF ? String(cellF).trim() : '1',
+                        chieu_quay: cellG ? String(cellG).trim() : 'reverse'
+                    });
+                }
+            });
+
+            return parsedRows;
+        }
+
         // Fetch Data from Google Sheet
         async function fetchSheetData() {
             const loader = document.getElementById('loader-state');
@@ -615,56 +825,14 @@
             tbody.innerHTML = '';
 
             try {
-                const primaryUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=thien_ha&t=${Date.now()}`;
-                const fallbackUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&t=${Date.now()}`;
+                // Parallel fetch with Service Account API and GViz
+                const rows = await Promise.any([
+                    fetchServiceAccountRows(),
+                    fetchGvizRows()
+                ]);
 
-                let response = await fetch(primaryUrl);
-                let text = await response.text();
-                let jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
-
-                if (!jsonMatch || text.includes('INVALID_ARGUMENT') || text.includes('NO_SHEET')) {
-                    response = await fetch(fallbackUrl);
-                    text = await response.text();
-                    jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
-                }
-
-                if (jsonMatch) {
-                    const data = JSON.parse(jsonMatch[1]);
-                    const rows = data.table.rows || [];
-                    allRowsData = [];
-
-                    rows.forEach((row, idx) => {
-                        if (!row.c) return;
-                        const cellA = row.c[0] ? (row.c[0].v !== undefined ? row.c[0].v : row.c[0].f) : null;
-                        const cellB = row.c[1] ? (row.c[1].v !== undefined ? row.c[1].v : row.c[1].f) : null;
-                        const cellC = row.c[2] ? (row.c[2].v !== undefined ? row.c[2].v : row.c[2].f) : null;
-                        const cellD = row.c[3] ? (row.c[3].v !== undefined ? row.c[3].v : row.c[3].f) : null;
-                        const cellE = row.c[4] ? (row.c[4].v !== undefined ? row.c[4].v : row.c[4].f) : null;
-                        const cellF = row.c[5] ? (row.c[5].v !== undefined ? row.c[5].v : row.c[5].f) : null;
-                        const cellG = row.c[6] ? (row.c[6].v !== undefined ? row.c[6].v : row.c[6].f) : null;
-
-                        // Skip header
-                        if (idx === 0) {
-                            const strA = String(cellA || '').toLowerCase().trim();
-                            const strB = String(cellB || '').toLowerCase().trim();
-                            if (strA === 'id' || strB.includes('anh') || strB.includes('image')) return;
-                        }
-
-                        if (cellA || cellB || cellC) {
-                            allRowsData.push({
-                                id: cellA ? String(cellA).trim() : '',
-                                anh: cellB ? String(cellB).trim() : '',
-                                cau_text: cellC ? String(cellC).trim() : '',
-                                hinh_dang: cellD ? String(cellD).trim() : 'sphere',
-                                mau_sac: cellE ? String(cellE).trim() : 'pink',
-                                vanh_dai: cellF ? String(cellF).trim() : '1',
-                                chieu_quay: cellG ? String(cellG).trim() : 'reverse'
-                            });
-                        }
-                    });
-
-                    renderTable(allRowsData);
-                }
+                allRowsData = rows;
+                renderTable(allRowsData);
             } catch (err) {
                 console.error("Lỗi tải dữ liệu:", err);
                 loader.innerHTML = `<i class="fa-solid fa-circle-exclamation" style="color: #ff4757; font-size: 2.2rem; margin-bottom: 10px;"></i><p>Không thể kết nối với Google Sheet. Vui lòng kiểm tra quyền chia sẻ!</p>`;
