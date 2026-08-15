@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sparkling Heart Galaxy 3D - Vũ Trụ Tình Yêu</title>
+    <meta name="description" content="Trải nghiệm trái tim tinh vân 3D phát sáng lấp lánh và các khung ảnh kỷ niệm bay lượn nhẹ nhàng trong vũ trụ.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Three.js & OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <!-- 3D Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- Dark Vignette Overlay -->
+    <div class="cosmic-overlay"></div>
+
+    <!-- HUD Header -->
+    <header class="hud-header">
+        <div class="brand">
+            <div class="badge">
+                <i class="fa-solid fa-atom pulse-icon"></i>
+                <span>COSMOS GALAXY</span>
+            </div>
+            <h1>Quả Cầu Vũ Trụ 3D</h1>
+        </div>
+
+        <div class="quick-actions">
+            <button id="sheet-sync-btn" class="btn btn-secondary" title="Đồng bộ Google Sheet">
+                <i class="fa-solid fa-table"></i>
+                <span>Google Sheet</span>
+            </button>
+
+            <label for="image-upload-input" class="btn btn-primary" title="Thêm ảnh của bạn">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>Thêm ảnh</span>
+            </label>
+            <input type="file" id="image-upload-input" accept="image/*" multiple style="display: none;">
+
+            <button id="add-text-btn" class="btn btn-secondary" title="Thêm chữ kỷ niệm">
+                <i class="fa-solid fa-pen-nib"></i>
+                <span>Thêm lời chúc</span>
+            </button>
+
+            <button id="audio-toggle-btn" class="btn icon-only" title="Bật/Tắt Nhạc Tình Yêu">
+                <i class="fa-solid fa-music"></i>
+            </button>
+
+            <button id="settings-toggle-btn" class="btn icon-only" title="Tùy chỉnh">
+                <i class="fa-solid fa-sliders"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Floating Audio Element -->
+    <audio id="bg-music" loop src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"></audio>
+
+    <!-- Control Panel Drawer -->
+    <aside id="control-panel" class="control-panel glass-panel">
+        <div class="panel-header">
+            <h3><i class="fa-solid fa-sliders"></i> Tùy Chỉnh Vũ Trụ</h3>
+            <button id="close-panel-btn" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="panel-body">
+            <!-- Shape Selection -->
+            <div class="control-group">
+                <h4><i class="fa-solid fa-shapes"></i> Hình Dạng Trung Tâm</h4>
+                <div class="mode-presets" style="flex-wrap: wrap; gap: 6px;">
+                    <button class="shape-btn active" data-shape="sphere"><i class="fa-solid fa-globe"></i> Quả Cầu 3D</button>
+                    <button class="shape-btn" data-shape="heart"><i class="fa-solid fa-heart"></i> Trái Tim 3D</button>
+                    <button class="shape-btn" data-shape="spiral"><i class="fa-solid fa-bahai"></i> Ngân Hà 3D</button>
+                    <button class="shape-btn" data-shape="saturn"><i class="fa-solid fa-ring"></i> Thổ Tinh 3D</button>
+                </div>
+            </div>
+
+            <!-- Theme Selection -->
+            <div class="control-group">
+                <h4><i class="fa-solid fa-palette"></i> Màu Sắc Tinh Vân</h4>
+                <div class="color-presets">
+                    <button class="color-btn active" data-theme="pink" style="--c1:#ff2a85; --c2:#ff73b3;" title="Hồng Lấp Lánh"></button>
+                    <button class="color-btn" data-theme="gold" style="--c1:#ffb703; --c2:#fb8500;" title="Vàng Ánh Kim"></button>
+                    <button class="color-btn" data-theme="purple" style="--c1:#9d4edd; --c2:#c77dff;" title="Tím Tinh Vân"></button>
+                    <button class="color-btn" data-theme="cyan" style="--c1:#00b4d8; --c2:#90e0ef;" title="Lam Băng"></button>
+                    <button class="color-btn" data-theme="white" style="--c1:#ffffff; --c2:#ffb3c6;" title="Bạc Ngọc Trai"></button>
+                </div>
+            </div>
+
+            <!-- Orbit Photo Controls -->
+            <div class="control-group">
+                <h4><i class="fa-solid fa-images"></i> Quỹ Đạo Ảnh & Chữ</h4>
+                
+                <div class="slider-item">
+                    <div class="slider-label">
+                        <span>Tốc độ xoay</span>
+                        <span id="speed-val">0.5x</span>
+                    </div>
+                    <input type="range" id="orbit-speed" min="0" max="3" step="0.1" value="0.5">
+                </div>
+
+                <div class="slider-item">
+                    <div class="slider-label">
+                        <span>Bán kính xoay</span>
+                        <span id="radius-val">30</span>
+                    </div>
+                    <input type="range" id="orbit-radius" min="15" max="50" step="1" value="30">
+                </div>
+
+                <div class="slider-item">
+                    <div class="slider-label">
+                        <span>Kích thước khung ảnh</span>
+                        <span id="size-val">1.0x</span>
+                    </div>
+                    <input type="range" id="photo-size" min="0.6" max="2.0" step="0.1" value="1.0">
+                </div>
+            </div>
+
+            <!-- Sparkle Density & Meteorite Control -->
+            <div class="control-group">
+                <h4><i class="fa-solid fa-meteor"></i> Vành Đai Thiên Thạch</h4>
+                
+                <div class="mode-presets">
+                    <button class="mode-btn active" data-belt="1"><i class="fa-solid fa-circle-notch"></i> 1 Vành đai ngang</button>
+                    <button class="mode-btn" data-belt="2"><i class="fa-solid fa-arrows-spin"></i> 2 Vành đai chéo</button>
+                </div>
+
+                <!-- Rotation Direction Control -->
+                <div class="mode-presets" style="margin-top: 6px;">
+                    <button class="dir-btn active" data-dir="reverse" title="Xoay ngược chiều với ảnh"><i class="fa-solid fa-arrows-left-right"></i> Ngược chiều ảnh</button>
+                    <button class="dir-btn" data-dir="same" title="Xoay cùng chiều với ảnh"><i class="fa-solid fa-rotate-right"></i> Cùng chiều ảnh</button>
+                </div>
+
+                <div class="slider-item" style="margin-top: 6px;">
+                    <div class="slider-label">
+                        <span>Tốc độ thiên thạch xoay</span>
+                        <span id="meteor-speed-val">0.5x</span>
+                    </div>
+                    <input type="range" id="meteor-speed" min="0.1" max="3.0" step="0.1" value="0.5">
+                </div>
+
+                <div class="slider-item">
+                    <div class="slider-label">
+                        <span>Độ sáng lấp lánh</span>
+                        <span id="brightness-val">1.0x</span>
+                    </div>
+                    <input type="range" id="sparkle-brightness" min="0.5" max="2.0" step="0.1" value="1.0">
+                </div>
+            </div>
+
+            <!-- Reset Button -->
+            <button id="reset-btn" class="reset-btn">
+                <i class="fa-solid fa-rotate-left"></i> Khôi phục mặc định
+            </button>
+        </div>
+    </aside>
+
+    <!-- Google Sheet Sync Modal -->
+    <div id="sheet-modal" class="modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-card glass-panel">
+            <button class="modal-close" id="close-sheet-modal"><i class="fa-solid fa-xmark"></i></button>
+            <h3><i class="fa-solid fa-file-csv"></i> Kết Nối Google Sheet</h3>
+            <p>Nhập <b>Google Sheet ID</b> hoặc <b>Đường link Google Sheet</b> của bạn (yêu cầu tab đặt tên <code>thien_ha</code> hoặc trang tính mặc định):</p>
+            <input type="text" id="sheet-id-input" placeholder="Ví dụ: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms">
+            <div class="modal-actions" style="gap: 10px; margin-top: 10px;">
+                <button id="load-sheet-btn" class="btn btn-primary"><i class="fa-solid fa-rotate"></i> Tải Dữ Liệu Sheet</button>
+            </div>
+            <p style="font-size: 0.75rem; color: #aaa; margin-top: 8px;">
+                💡 <b>Mẹo chia sẻ link:</b> Tạo link chứa ID dạng <code>?id=SHEET_ID_CỦA_BẠN</code> để người khác mở link là tự động xem được luôn!
+            </p>
+        </div>
+    </div>
+
+    <!-- Add Custom Text Modal -->
+    <div id="text-modal" class="modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-card glass-panel">
+            <button class="modal-close" id="close-text-modal"><i class="fa-solid fa-xmark"></i></button>
+            <h3><i class="fa-solid fa-pen-nib"></i> Thêm Lời Chúc / Thông Điệp</h3>
+            <p>Nhập lời chúc hoặc thông điệp tình yêu muốn gắn vào vũ trụ:</p>
+            <input type="text" id="custom-text-input" placeholder="Ví dụ: Anh Yêu Em 💖, Forever Together...">
+            <div class="modal-actions" style="gap: 10px; margin-top: 10px;">
+                <button id="submit-text-btn" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Thêm Vào Ngân Hà</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photo / Badge Enlarge Modal -->
+    <div id="photo-modal" class="modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-card photo-card-modal glass-panel">
+            <button class="modal-close" id="close-photo-modal"><i class="fa-solid fa-xmark"></i></button>
+            <div id="modal-photo-wrapper" class="modal-photo-wrapper">
+                <img id="modal-img" src="" alt="Kỷ niệm tình yêu">
+            </div>
+            <div id="modal-badge-card" class="modal-badge-card" style="display: none;">
+                <i class="fa-solid fa-heart modal-heart-icon"></i>
+                <div id="modal-badge-text" class="modal-badge-text"></div>
+            </div>
+            <h3 id="modal-title">Kỷ Niệm Tình Yêu</h3>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Main Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>
