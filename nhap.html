@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bảng Dữ Liệu Sheet Thiên Hà - Cosmos Dashboard</title>
-    <meta name="description" content="Trình quản lý, tải ảnh FreeImage.host và cập nhật dữ liệu bảng tính Google Sheet thien_ha.">
+    <meta name="description" content="Trình quản lý, tải ảnh và cập nhật dữ liệu bảng tính Google Sheet thien_ha.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -579,7 +579,7 @@
             color: #ffffff;
         }
 
-        /* FreeImage.host Upload Box */
+        /* Upload Box Styling */
         .upload-section {
             background: rgba(255, 42, 133, 0.04);
             border: 1px dashed rgba(255, 42, 133, 0.4);
@@ -596,6 +596,13 @@
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 10px;
+        }
+
+        .upload-btn-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .btn-upload-trigger {
@@ -616,6 +623,27 @@
         .btn-upload-trigger:hover {
             background: rgba(255, 42, 133, 0.4);
             border-color: var(--primary);
+        }
+
+        .btn-freeimage-link {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffb3c6;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-freeimage-link:hover {
+            background: rgba(255, 255, 255, 0.16);
+            color: #ffffff;
         }
 
         .upload-status-text {
@@ -770,7 +798,7 @@
                 </div>
                 <div class="brand-text">
                     <h1>Dữ Liệu Sheet Thiên Hà</h1>
-                    <p>Tab <code>thien_ha</code> &bull; Tích hợp tải ảnh trực tiếp <code>FreeImage.host</code></p>
+                    <p>Tab <code>thien_ha</code> &bull; Hỗ trợ tải ảnh FreeImage.host & Tải ảnh trực tiếp</p>
                 </div>
             </div>
 
@@ -859,20 +887,27 @@
                 <div class="form-group">
                     <label for="new-anh"><i class="fa-solid fa-images"></i> Link Ảnh (Cột B)</label>
                     
-                    <!-- FreeImage Upload Box -->
+                    <!-- Upload Box -->
                     <div class="upload-section">
                         <div class="upload-actions-bar">
-                            <label for="new-image-file-input" class="btn-upload-trigger">
-                                <i class="fa-solid fa-cloud-arrow-up"></i>
-                                <span>Tải ảnh từ máy tính (FreeImage.host)</span>
-                            </label>
-                            <input type="file" id="new-image-file-input" multiple accept="image/*" style="display: none;">
+                            <div class="upload-btn-group">
+                                <label for="new-image-file-input" class="btn-upload-trigger">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    <span>Tải ảnh từ máy tính</span>
+                                </label>
+                                <input type="file" id="new-image-file-input" multiple accept="image/*" style="display: none;">
+
+                                <button type="button" class="btn-freeimage-link" onclick="openFreeImageUploader()">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    <span>Mở FreeImage.host</span>
+                                </button>
+                            </div>
                             <span id="new-upload-status" class="upload-status-text"></span>
                         </div>
                         <div id="new-preview-strip" class="upload-preview-container"></div>
                     </div>
 
-                    <textarea id="new-anh" class="form-control" rows="2" placeholder="Hoặc dán trực tiếp link ảnh (nhiều ảnh ngăn cách bằng dấu |)"></textarea>
+                    <textarea id="new-anh" class="form-control" rows="2" placeholder="Dán link ảnh trực tiếp hoặc mã từ FreeImage.host (ngăn cách bằng dấu |)"></textarea>
                 </div>
 
                 <div class="form-group">
@@ -955,14 +990,21 @@
                 <div class="form-group">
                     <label for="edit-anh"><i class="fa-solid fa-images"></i> Link Ảnh (Cột B)</label>
                     
-                    <!-- FreeImage Upload Box -->
+                    <!-- Upload Box -->
                     <div class="upload-section">
                         <div class="upload-actions-bar">
-                            <label for="edit-image-file-input" class="btn-upload-trigger">
-                                <i class="fa-solid fa-cloud-arrow-up"></i>
-                                <span>Tải thêm ảnh mới (FreeImage.host)</span>
-                            </label>
-                            <input type="file" id="edit-image-file-input" multiple accept="image/*" style="display: none;">
+                            <div class="upload-btn-group">
+                                <label for="edit-image-file-input" class="btn-upload-trigger">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    <span>Tải thêm ảnh từ máy tính</span>
+                                </label>
+                                <input type="file" id="edit-image-file-input" multiple accept="image/*" style="display: none;">
+
+                                <button type="button" class="btn-freeimage-link" onclick="openFreeImageUploader()">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    <span>Mở FreeImage.host</span>
+                                </button>
+                            </div>
                             <span id="edit-upload-status" class="upload-status-text"></span>
                         </div>
                         <div id="edit-preview-strip" class="upload-preview-container"></div>
@@ -1040,7 +1082,6 @@
 
     <script>
         const SHEET_ID = '1eJkfAcu32pMIvI1n2tD2vGGdDpmNBDHPuKE8RgkPNNk';
-        const FREEIMAGE_API_KEY = '6d207e02198a847aa98d0a2a901485a5';
         let allRowsData = [];
 
         // Google Cloud Service Account API Configuration
@@ -1145,16 +1186,44 @@
             }
         }
 
-        // Format Image URLs (Drive thumbnail conversion)
+        // Smart Format and Clean Image URLs (FreeImage.host, Google Drive, TmpFiles, BBCode, HTML)
         function formatImageUrl(url) {
             if (!url || typeof url !== 'string') return '';
             url = url.trim();
+
+            // Strip BBCode [img]...[/img] or [url]...[/url]
+            url = url.replace(/\[img\](.*?)\[\/img\]/gi, '$1')
+                     .replace(/\[url.*?\](.*?)\[\/url\]/gi, '$1')
+                     .replace(/<img.*?src=["'](.*?)["'].*?>/gi, '$1')
+                     .replace(/<a.*?href=["'](.*?)["'].*?>/gi, '$1')
+                     .trim();
+
+            // Google Drive direct thumbnail conversion
             if (url.includes('drive.google.com')) {
                 const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
                 if (match && match[1]) {
                     return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
                 }
             }
+
+            // FreeImage.host viewer conversion (e.g. https://freeimage.host/i/CiliYR1 -> https://iili.io/CiliYR1.jpg)
+            if (url.includes('freeimage.host/i/')) {
+                const match = url.match(/freeimage\.host\/i\/([a-zA-Z0-9_-]+)/);
+                if (match && match[1]) {
+                    return `https://iili.io/${match[1]}.jpg`;
+                }
+            }
+
+            // FreeImage.host thumbnail to full size (e.g. https://iili.io/xyz.th.jpg -> https://iili.io/xyz.jpg)
+            if (url.includes('iili.io') && url.includes('.th.')) {
+                url = url.replace('.th.', '.');
+            }
+
+            // TmpFiles direct link conversion
+            if (url.includes('tmpfiles.org/') && !url.includes('/dl/')) {
+                url = url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
+            }
+
             return url;
         }
 
@@ -1172,25 +1241,40 @@
             setTimeout(() => toast.remove(), 2800);
         }
 
-        // Upload Single Image File to FreeImage.host API
-        async function uploadFileToFreeImage(file) {
-            const formData = new FormData();
-            formData.append('key', FREEIMAGE_API_KEY);
-            formData.append('action', 'upload');
-            formData.append('source', file);
-            formData.append('format', 'json');
+        // Open FreeImage.host in a convenient popup window
+        function openFreeImageUploader() {
+            const w = 800, h = 650;
+            const left = (window.innerWidth - w) / 2;
+            const top = (window.innerHeight - h) / 2;
+            window.open('https://freeimage.host/upload', 'FreeImageHost', `width=${w},height=${h},top=${top},left=${left}`);
+            showToast("Mở FreeImage.host: Tải ảnh xong hãy copy link dán vào ô bên dưới! 📸");
+        }
 
-            const res = await fetch('https://freeimage.host/api/1/upload', {
-                method: 'POST',
-                body: formData
-            });
-
-            const data = await res.json();
-            if (data && data.status_code === 200 && data.image && data.image.url) {
-                return data.image.url;
-            } else {
-                throw new Error(data?.error?.message || "Lỗi tải ảnh lên FreeImage.host");
+        // Upload Single Image File via Multi-Strategy CORS Engine
+        async function uploadFileDirect(file) {
+            // Strategy 1: TmpFiles.org API (Fast, Free, Full CORS support)
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                const res = await fetch('https://tmpfiles.org/api/v1/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const json = await res.json();
+                if (json && json.status === 'success' && json.data && json.data.url) {
+                    return json.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
+                }
+            } catch (e) {
+                console.warn("TmpFiles upload fallback:", e);
             }
+
+            // Strategy 2: Base64 Data URL (Never fails, 100% offline & local support)
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
         }
 
         // Handle Multiple File Upload for a Form
@@ -1201,15 +1285,15 @@
             statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang tải 0/${files.length} ảnh...`;
             fileInput.disabled = true;
 
-            let uploadedUrls = [];
-            let currentUrls = textareaEl.value ? textareaEl.value.split('|').map(s => s.trim()).filter(Boolean) : [];
+            let uploadedCount = 0;
+            let currentUrls = textareaEl.value ? textareaEl.value.split('|').map(s => formatImageUrl(s)).filter(Boolean) : [];
 
             for (let i = 0; i < files.length; i++) {
-                statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang tải ảnh ${i + 1}/${files.length}...`;
+                statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý ảnh ${i + 1}/${files.length}...`;
                 try {
-                    const url = await uploadFileToFreeImage(files[i]);
-                    currentUrls.push(url);
-                    uploadedUrls.push(url);
+                    const directUrl = await uploadFileDirect(files[i]);
+                    currentUrls.push(directUrl);
+                    uploadedCount++;
                 } catch (err) {
                     console.error(err);
                     showToast(`Ảnh "${files[i].name}" lỗi: ${err.message}`, true);
@@ -1221,17 +1305,17 @@
 
             fileInput.disabled = false;
             fileInput.value = '';
-            statusEl.innerHTML = `<i class="fa-solid fa-check" style="color: #2ed573;"></i> Đã tải xong ${uploadedUrls.length} ảnh!`;
+            statusEl.innerHTML = `<i class="fa-solid fa-check" style="color: #2ed573;"></i> Đã thêm thành công ${uploadedCount} ảnh!`;
             setTimeout(() => { statusEl.innerText = ''; }, 3500);
         }
 
         // Render interactive thumbnail strip for textarea
         function renderThumbnailStrip(textareaEl, containerEl) {
             containerEl.innerHTML = '';
-            const urls = textareaEl.value ? textareaEl.value.split('|').map(s => s.trim()).filter(Boolean) : [];
+            const rawUrls = textareaEl.value ? textareaEl.value.split('|').map(s => s.trim()).filter(Boolean) : [];
 
-            urls.forEach((url, idx) => {
-                const directUrl = formatImageUrl(url);
+            rawUrls.forEach((rawUrl, idx) => {
+                const directUrl = formatImageUrl(rawUrl);
                 const item = document.createElement('div');
                 item.className = 'upload-preview-item';
                 item.innerHTML = `
@@ -1242,8 +1326,8 @@
                 // Remove image on click
                 item.querySelector('.upload-preview-remove').addEventListener('click', (e) => {
                     e.stopPropagation();
-                    urls.splice(idx, 1);
-                    textareaEl.value = urls.join(' | ');
+                    rawUrls.splice(idx, 1);
+                    textareaEl.value = rawUrls.join(' | ');
                     renderThumbnailStrip(textareaEl, containerEl);
                 });
 
@@ -1292,7 +1376,7 @@
 
                 if (cellA || cellB || cellC) {
                     parsedRows.push({
-                        rowNumber: idx + 1, // Actual 1-based Google Sheet row index
+                        rowNumber: idx + 1,
                         id: cellA,
                         anh: cellB,
                         cau_text: cellC,
@@ -1506,15 +1590,14 @@
             };
 
             data.forEach((item, idx) => {
-                const anhList = item.anh ? item.anh.split('|').map(s => s.trim()).filter(Boolean) : [];
+                const anhList = item.anh ? item.anh.split('|').map(s => formatImageUrl(s)).filter(Boolean) : [];
                 const textList = item.cau_text ? item.cau_text.split('|').map(s => s.trim()).filter(Boolean) : [];
 
                 // Photos HTML
                 let photosHtml = '<span style="color: var(--text-muted); font-size: 0.85rem;">(Không có ảnh)</span>';
                 if (anhList.length > 0) {
                     photosHtml = '<div class="photo-gallery">';
-                    anhList.forEach(url => {
-                        const directUrl = formatImageUrl(url);
+                    anhList.forEach(directUrl => {
                         photosHtml += `<img src="${directUrl}" class="photo-thumb" onclick="openPreview('${directUrl}')" title="Click để phóng to">`;
                     });
                     photosHtml += '</div>';
@@ -1631,7 +1714,7 @@
         });
 
         // ----------------------------------------------------
-        // ADD NEW MODAL & FREEIMAGE.HOST UPLOAD WIRING
+        // ADD NEW MODAL & UPLOAD WIRING
         // ----------------------------------------------------
         const addModal = document.getElementById('add-modal');
         const addNewBtn = document.getElementById('add-new-btn');
@@ -1665,7 +1748,7 @@
                 }
             });
 
-            // Handle FreeImage File Upload on Add
+            // Handle Direct File Upload on Add
             if (newFileInput) {
                 newFileInput.addEventListener('change', () => {
                     handleImageUploadFlow(newFileInput, newAnhTextarea, newPreviewStrip, newUploadStatus);
@@ -1728,7 +1811,7 @@
         }
 
         // ----------------------------------------------------
-        // EDIT ROW MODAL & FREEIMAGE.HOST UPLOAD WIRING
+        // EDIT ROW MODAL & UPLOAD WIRING
         // ----------------------------------------------------
         const editModal = document.getElementById('edit-modal');
         const closeEditModal = document.getElementById('close-edit-modal');
@@ -1771,7 +1854,7 @@
                 }
             });
 
-            // Handle FreeImage File Upload on Edit
+            // Handle Direct File Upload on Edit
             if (editFileInput) {
                 editFileInput.addEventListener('change', () => {
                     handleImageUploadFlow(editFileInput, editAnhTextarea, editPreviewStrip, editUploadStatus);
