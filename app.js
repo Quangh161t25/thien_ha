@@ -1,6 +1,6 @@
 /**
  * Sparkling Heart Galaxy 3D - Vũ Trụ Tình Yêu
- * Pure Three.js & Google Sheets API Integration via Service Account
+ * Pure Three.js & Ultra-Fast Google Sheets API with Cinematic Cosmic Zoom
  */
 
 // Google Cloud Service Account API Configuration (from test-gia-ason.json)
@@ -76,6 +76,35 @@ let mouse = new THREE.Vector2();
 let isAudioPlaying = false;
 let audioCtx = null;
 let chimeInterval = null;
+
+// Cinematic Zoom Animation State (Zoom từ gần ra xa)
+const zoomAnimation = {
+    active: false,
+    startTime: 0,
+    duration: 2.2, // seconds
+    startPos: new THREE.Vector3(0, 4, 8),
+    targetPos: new THREE.Vector3(0, 30, 60)
+};
+
+// Trigger Cosmic Zoom Animation (Camera glides back from near to far)
+function triggerCosmicZoomAnimation() {
+    zoomAnimation.active = true;
+    zoomAnimation.startTime = clock.getElapsedTime();
+    if (camera) camera.position.copy(zoomAnimation.startPos);
+    if (controls) {
+        controls.target.set(0, 0, 0);
+        controls.update();
+    }
+
+    // Contract items for expansion
+    photoMeshes.forEach(mesh => {
+        mesh.userData.currentExpansion = 0.05;
+        mesh.scale.set(0.01, 0.01, 0.01);
+    });
+
+    // Spawn central cosmic burst
+    spawnClickBurst(new THREE.Vector3(0, 0, 0));
+}
 
 // Toast Notification Helper
 function showToast(message, type = 'normal') {
@@ -181,12 +210,12 @@ async function getGoogleAccessToken() {
         tokenExpiresAt = now + (tokenData.expires_in || 3600);
         return cachedAccessToken;
     } catch (err) {
-        console.warn("Service Account JWT Error, falling back to public fetch:", err);
+        console.warn("Service Account JWT Error:", err);
         return null;
     }
 }
 
-// Convert Google Drive & direct URLs to embeddable image URLs
+// Convert Google Drive & direct URLs to super fast high-res thumbnail URLs
 function formatImageUrl(url) {
     if (!url || typeof url !== 'string') return '';
     url = url.trim();
@@ -194,7 +223,8 @@ function formatImageUrl(url) {
     if (url.includes('drive.google.com')) {
         const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
         if (fileIdMatch && fileIdMatch[1]) {
-            return `https://lh3.googleusercontent.com/d/${fileIdMatch[1]}`;
+            // Google Drive thumbnail service sz=w1000 loads 20x faster with sharp quality
+            return `https://drive.google.com/thumbnail?id=${fileIdMatch[1]}&sz=w1000`;
         }
     }
     return url;
@@ -231,14 +261,152 @@ function parseUrlParams() {
     };
 }
 
+// Fast GViz Data Fetcher (ultra low latency)
+async function fetchGvizData(sheetId, filterIdStr) {
+    const primaryUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=thien_ha&t=${Date.now()}`;
+    const fallbackUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&t=${Date.now()}`;
+
+    let response = await fetch(primaryUrl);
+    let text = await response.text();
+    let jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
+
+    if (!jsonMatch || text.includes('INVALID_ARGUMENT') || text.includes('NO_SHEET')) {
+        response = await fetch(fallbackUrl);
+        text = await response.text();
+        jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
+    }
+
+    if (!jsonMatch) throw new Error("GViz parse error");
+
+    const data = JSON.parse(jsonMatch[1]);
+    if (!data.table || !data.table.rows) throw new Error("No rows in GViz");
+
+    const fetchedPhotos = [];
+    const fetchedBadges = [];
+
+    data.table.rows.forEach((row, index) => {
+        if (!row.c) return;
+        const cellA = row.c[0] ? (row.c[0].v !== undefined ? row.c[0].v : row.c[0].f) : null;
+        const cellB = row.c[1] ? (row.c[1].v !== undefined ? row.c[1].v : row.c[1].f) : null;
+        const cellC = row.c[2] ? (row.c[2].v !== undefined ? row.c[2].v : row.c[2].f) : null;
+
+        if (index === 0) {
+            const strA = String(cellA || '').toLowerCase().trim();
+            const strB = String(cellB || '').toLowerCase().trim();
+            if (strA === 'id' || strB.includes('anh') || strB.includes('image')) return;
+        }
+
+        const cellId = cellA !== null && cellA !== undefined ? String(cellA).trim() : null;
+        const cellAnh = cellB ? String(cellB).trim() : null;
+        const cellText = cellC ? String(cellC).trim() : null;
+
+        if (filterIdStr && filterIdStr !== 'all') {
+            if (!cellId || cellId.toLowerCase() !== filterIdStr) return;
+        }
+
+        const anhList = cellAnh ? cellAnh.split('|').map(s => s.trim()).filter(s => s.length > 0) : [];
+        const textList = cellText ? cellText.split('|').map(s => s.trim()).filter(s => s.length > 0) : [];
+
+        anhList.forEach((rawUrl, photoIdx) => {
+            if (rawUrl.startsWith('http') || rawUrl.startsWith('data:')) {
+                const caption = textList[photoIdx] || textList[0] || "Kỷ Niệm Tình Yêu 💖";
+                fetchedPhotos.push({
+                    src: formatImageUrl(rawUrl),
+                    caption: caption
+                });
+            }
+        });
+
+        textList.forEach((txt) => {
+            if (txt) {
+                fetchedBadges.push({
+                    text: txt,
+                    color: "#ff2a85"
+                });
+            }
+        });
+    });
+
+    if (fetchedPhotos.length === 0 && fetchedBadges.length === 0) {
+        throw new Error("No matching rows found in GViz");
+    }
+
+    return { photos: fetchedPhotos, badges: fetchedBadges };
+}
+
+// Google Sheets API v4 Data Fetcher via Service Account
+async function fetchServiceAccountData(sheetId, filterIdStr) {
+    const token = await getGoogleAccessToken();
+    if (!token) throw new Error("No Google token");
+
+    const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties.title`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!metaRes.ok) throw new Error("Meta error");
+
+    const metaData = await metaRes.json();
+    let targetSheetTitle = metaData.sheets[0].properties.title;
+    const thienHaSheet = metaData.sheets.find(s => s.properties.title.toLowerCase() === 'thien_ha');
+    if (thienHaSheet) targetSheetTitle = thienHaSheet.properties.title;
+
+    const valuesRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/'${encodeURIComponent(targetSheetTitle)}'!A:C`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!valuesRes.ok) throw new Error("Values error");
+
+    const valuesData = await valuesRes.json();
+    const rows = valuesData.values || [];
+
+    const fetchedPhotos = [];
+    const fetchedBadges = [];
+
+    rows.forEach((row, index) => {
+        if (index === 0) {
+            const col0 = String(row[0] || '').toLowerCase().trim();
+            const col1 = String(row[1] || '').toLowerCase().trim();
+            if (col0 === 'id' || col1.includes('anh') || col1.includes('image')) return;
+        }
+
+        const cellId = row[0] !== undefined && row[0] !== null ? String(row[0]).trim() : null;
+        const cellAnh = row[1] ? String(row[1]).trim() : null;
+        const cellText = row[2] ? String(row[2]).trim() : null;
+
+        if (filterIdStr && filterIdStr !== 'all') {
+            if (!cellId || cellId.toLowerCase() !== filterIdStr) return;
+        }
+
+        const anhList = cellAnh ? cellAnh.split('|').map(s => s.trim()).filter(s => s.length > 0) : [];
+        const textList = cellText ? cellText.split('|').map(s => s.trim()).filter(s => s.length > 0) : [];
+
+        anhList.forEach((rawUrl, photoIdx) => {
+            if (rawUrl.startsWith('http') || rawUrl.startsWith('data:')) {
+                const caption = textList[photoIdx] || textList[0] || "Kỷ Niệm Tình Yêu 💖";
+                fetchedPhotos.push({
+                    src: formatImageUrl(rawUrl),
+                    caption: caption
+                });
+            }
+        });
+
+        textList.forEach((txt) => {
+            if (txt) {
+                fetchedBadges.push({
+                    text: txt,
+                    color: "#ff2a85"
+                });
+            }
+        });
+    });
+
+    if (fetchedPhotos.length === 0 && fetchedBadges.length === 0) {
+        throw new Error("No matching rows found in Service Account API");
+    }
+
+    return { photos: fetchedPhotos, badges: fetchedBadges };
+}
+
 /**
- * Fetch Google Sheet Data from Tab 'thien_ha'
- * Structure:
- * - Cột A: id
- * - Cột B: anh
- * - Cột C: cau_text
- * @param {string} sheetIdInput 
- * @param {string|null} targetRowId (nếu truyền ID sẽ lọc đúng ID đó)
+ * Fetch Google Sheet Data from Tab 'thien_ha' in ultra-fast parallel mode
  */
 async function loadGoogleSheetData(sheetIdInput, targetRowId = null) {
     const sheetId = extractSheetId(sheetIdInput);
@@ -247,187 +415,36 @@ async function loadGoogleSheetData(sheetIdInput, targetRowId = null) {
         return false;
     }
 
-    let fetchedPhotos = [];
-    let fetchedBadges = [];
-    let loadedSuccessfully = false;
-
     const filterIdStr = targetRowId ? String(targetRowId).toLowerCase().trim() : null;
 
-    // 1. Try Official Google Sheets API v4 with Service Account Token
     try {
-        const token = await getGoogleAccessToken();
-        if (token) {
-            // Get spreadsheet metadata to detect sheet title
-            const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties.title`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+        // Run both GViz (super fast) and Service Account in parallel for instant response
+        const result = await Promise.any([
+            fetchGvizData(sheetId, filterIdStr),
+            fetchServiceAccountData(sheetId, filterIdStr)
+        ]);
 
-            if (metaRes.ok) {
-                const metaData = await metaRes.json();
-                if (metaData.sheets && metaData.sheets.length > 0) {
-                    let targetSheetTitle = metaData.sheets[0].properties.title;
-                    const thienHaSheet = metaData.sheets.find(s => s.properties.title.toLowerCase() === 'thien_ha');
-                    if (thienHaSheet) targetSheetTitle = thienHaSheet.properties.title;
+        if (result && (result.photos.length > 0 || result.badges.length > 0)) {
+            updateOrbitWithSheetData(result.photos, result.badges);
+            triggerCosmicZoomAnimation();
 
-                    const valuesRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/'${encodeURIComponent(targetSheetTitle)}'!A:C`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
-
-                    if (valuesRes.ok) {
-                        const valuesData = await valuesRes.json();
-                        const rows = valuesData.values || [];
-
-                        rows.forEach((row, index) => {
-                            // Skip header row if contains title keywords
-                            if (index === 0) {
-                                const col0 = String(row[0] || '').toLowerCase().trim();
-                                const col1 = String(row[1] || '').toLowerCase().trim();
-                                if (col0 === 'id' || col1.includes('anh') || col1.includes('image')) {
-                                    return;
-                                }
-                            }
-
-                            const cellId = row[0] !== undefined && row[0] !== null ? String(row[0]).trim() : null; // Cột A: id
-                            const cellAnh = row[1] ? String(row[1]).trim() : null; // Cột B: anh (nhiều ảnh ghép bởi dấu |)
-                            const cellText = row[2] ? String(row[2]).trim() : null; // Cột C: cau_text (nhiều câu text ghép bởi dấu |)
-
-                            // Filter by targetRowId if specified
-                            if (filterIdStr && filterIdStr !== 'all') {
-                                if (!cellId || cellId.toLowerCase() !== filterIdStr) {
-                                    return;
-                                }
-                            }
-
-                            // Tách danh sách ảnh theo dấu |
-                            const anhList = cellAnh ? cellAnh.split('|').map(s => s.trim()).filter(s => s.length > 0) : [];
-                            // Tách danh sách câu text theo dấu |
-                            const textList = cellText ? cellText.split('|').map(s => s.trim()).filter(s => s.length > 0) : [];
-
-                            // Đưa từng ảnh vào danh sách hiển thị với chú thích tương ứng
-                            anhList.forEach((rawUrl, photoIdx) => {
-                                if (rawUrl.startsWith('http') || rawUrl.startsWith('data:')) {
-                                    const caption = textList[photoIdx] || textList[0] || "Kỷ Niệm Tình Yêu 💖";
-                                    fetchedPhotos.push({
-                                        src: formatImageUrl(rawUrl),
-                                        caption: caption
-                                    });
-                                }
-                            });
-
-                            // Đưa từng câu text vào danh sách badge chữ phát sáng
-                            textList.forEach((txt) => {
-                                if (txt) {
-                                    fetchedBadges.push({
-                                        text: txt,
-                                        color: "#ff2a85"
-                                    });
-                                }
-                            });
-                        });
-
-                        if (fetchedPhotos.length > 0 || fetchedBadges.length > 0) {
-                            loadedSuccessfully = true;
-                        }
-                    }
-                }
+            if (targetRowId) {
+                showToast(`Đã nạp ${result.photos.length} ảnh & ${result.badges.length} lời chúc cho ID "${targetRowId}"! 💖`, "success");
+            } else {
+                showToast(`Đã đồng bộ ${result.photos.length} ảnh & ${result.badges.length} lời chúc! 💖`, "success");
             }
+            return true;
         }
-    } catch (apiErr) {
-        console.warn("Sheets API v4 error, trying fallback:", apiErr);
+    } catch (err) {
+        console.error("Sheet load error:", err);
     }
 
-    // 2. Fallback to Google Visualization API (GViz) if needed
-    if (!loadedSuccessfully) {
-        try {
-            const primaryUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=thien_ha`;
-            const fallbackUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
-
-            let response = await fetch(primaryUrl);
-            let text = await response.text();
-            let jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
-
-            if (!jsonMatch || text.includes('INVALID_ARGUMENT') || text.includes('NO_SHEET')) {
-                response = await fetch(fallbackUrl);
-                text = await response.text();
-                jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
-            }
-
-            if (jsonMatch) {
-                const data = JSON.parse(jsonMatch[1]);
-                if (data.table && data.table.rows) {
-                    data.table.rows.forEach((row, index) => {
-                        if (!row.c) return;
-                        const cellA = row.c[0] ? (row.c[0].v !== undefined ? row.c[0].v : row.c[0].f) : null;
-                        const cellB = row.c[1] ? (row.c[1].v !== undefined ? row.c[1].v : row.c[1].f) : null;
-                        const cellC = row.c[2] ? (row.c[2].v !== undefined ? row.c[2].v : row.c[2].f) : null;
-
-                        if (index === 0) {
-                            const strA = String(cellA || '').toLowerCase().trim();
-                            const strB = String(cellB || '').toLowerCase().trim();
-                            if (strA === 'id' || strB.includes('anh') || strB.includes('image')) return;
-                        }
-
-                        const cellId = cellA !== null && cellA !== undefined ? String(cellA).trim() : null;
-                        const cellAnh = cellB ? String(cellB).trim() : null;
-                        const cellText = cellC ? String(cellC).trim() : null;
-
-                        if (filterIdStr && filterIdStr !== 'all') {
-                            if (!cellId || cellId.toLowerCase() !== filterIdStr) {
-                                return;
-                            }
-                        }
-
-                        // Tách danh sách ảnh theo dấu |
-                        const anhList = cellAnh ? cellAnh.split('|').map(s => s.trim()).filter(s => s.length > 0) : [];
-                        // Tách danh sách câu text theo dấu |
-                        const textList = cellText ? cellText.split('|').map(s => s.trim()).filter(s => s.length > 0) : [];
-
-                        anhList.forEach((rawUrl, photoIdx) => {
-                            if (rawUrl.startsWith('http') || rawUrl.startsWith('data:')) {
-                                const caption = textList[photoIdx] || textList[0] || "Kỷ Niệm Tình Yêu 💖";
-                                fetchedPhotos.push({
-                                    src: formatImageUrl(rawUrl),
-                                    caption: caption
-                                });
-                            }
-                        });
-
-                        textList.forEach((txt) => {
-                            if (txt) {
-                                fetchedBadges.push({
-                                    text: txt,
-                                    color: "#ff2a85"
-                                });
-                            }
-                        });
-                    });
-
-                    if (fetchedPhotos.length > 0 || fetchedBadges.length > 0) {
-                        loadedSuccessfully = true;
-                    }
-                }
-            }
-        } catch (gvizErr) {
-            console.error("GViz fallback error:", gvizErr);
-        }
-    }
-
-    if (loadedSuccessfully) {
-        updateOrbitWithSheetData(fetchedPhotos, fetchedBadges);
-        if (targetRowId) {
-            showToast(`Đã nạp ${fetchedPhotos.length} ảnh và ${fetchedBadges.length} câu text cho ID "${targetRowId}"! 💖`, "success");
-        } else {
-            showToast(`Đã nạp ${fetchedPhotos.length} ảnh và ${fetchedBadges.length} câu text từ Sheet! 💖`, "success");
-        }
-        return true;
+    if (targetRowId) {
+        showToast(`Không tìm thấy dữ liệu cho ID "${targetRowId}" trong Sheet!`, "error");
     } else {
-        if (targetRowId) {
-            showToast(`Không tìm thấy dữ liệu cho ID "${targetRowId}" trong Sheet!`, "error");
-        } else {
-            showToast("Không thể tải dữ liệu! Hãy chia sẻ Sheet với email service account hoặc mở quyền xem công khai.", "error");
-        }
-        return false;
+        showToast("Không thể tải dữ liệu! Hãy kiểm tra quyền chia sẻ Sheet.", "error");
     }
+    return false;
 }
 
 // Update Orbiting Items with newly loaded Google Sheet photos & text
@@ -454,8 +471,10 @@ function updateOrbitWithSheetData(photos, badges) {
                 angleOffset: (idx / totalItems) * Math.PI * 2 + Math.random() * 0.3, 
                 radiusOffset: 16 + Math.random() * 22, 
                 yOffset: (Math.random() - 0.5) * 14,
-                speedFactor: 0.8 + Math.random() * 0.5
+                speedFactor: 0.8 + Math.random() * 0.5,
+                currentExpansion: 0.05
             };
+            mesh.scale.set(0.01, 0.01, 0.01);
             orbitGroup.add(mesh);
             photoMeshes.push(mesh);
         });
@@ -476,8 +495,10 @@ function updateOrbitWithSheetData(photos, badges) {
             angleOffset: (totalIdx / totalItems) * Math.PI * 2 + Math.random() * 0.3, 
             radiusOffset: 15 + Math.random() * 21, 
             yOffset: (Math.random() - 0.5) * 14,
-            speedFactor: 0.8 + Math.random() * 0.5
+            speedFactor: 0.8 + Math.random() * 0.5,
+            currentExpansion: 0.05
         };
+        mesh.scale.set(0.01, 0.01, 0.01);
         orbitGroup.add(mesh);
         photoMeshes.push(mesh);
     });
@@ -503,6 +524,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
     if (sheetId) {
         loadGoogleSheetData(sheetId, rowId);
+    } else {
+        triggerCosmicZoomAnimation();
     }
 
     initEvents();
@@ -517,7 +540,7 @@ function initScene() {
     scene.fog = new THREE.FogExp2(0x040207, 0.015);
 
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 30, 60);
+    camera.position.set(0, 4, 8); // Start close for cosmic zoom animation
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -945,8 +968,10 @@ function initOrbitItems() {
                 angleOffset: (idx / totalItems) * Math.PI * 2 + Math.random() * 0.3, 
                 radiusOffset: 16 + Math.random() * 22, 
                 yOffset: (Math.random() - 0.5) * 14,
-                speedFactor: 0.8 + Math.random() * 0.5
+                speedFactor: 0.8 + Math.random() * 0.5,
+                currentExpansion: 0.05
             };
+            mesh.scale.set(0.01, 0.01, 0.01);
             orbitGroup.add(mesh);
             photoMeshes.push(mesh);
         });
@@ -968,8 +993,10 @@ function initOrbitItems() {
             angleOffset: (totalIdx / totalItems) * Math.PI * 2 + Math.random() * 0.3, 
             radiusOffset: 15 + Math.random() * 21, 
             yOffset: (Math.random() - 0.5) * 14,
-            speedFactor: 0.8 + Math.random() * 0.5
+            speedFactor: 0.8 + Math.random() * 0.5,
+            currentExpansion: 0.05
         };
+        mesh.scale.set(0.01, 0.01, 0.01);
         orbitGroup.add(mesh);
         photoMeshes.push(mesh);
     });
@@ -995,7 +1022,8 @@ function addCustomPhoto(file) {
                 angleOffset: Math.random() * Math.PI * 2, 
                 radiusOffset: 16 + Math.random() * 22, 
                 yOffset: (Math.random() - 0.5) * 14,
-                speedFactor: 0.8 + Math.random() * 0.5
+                speedFactor: 0.8 + Math.random() * 0.5,
+                currentExpansion: 1.0
             };
 
             mesh.scale.set(0.01, 0.01, 0.01);
@@ -1036,7 +1064,8 @@ function addCustomText(text) {
         angleOffset: Math.random() * Math.PI * 2, 
         radiusOffset: 15 + Math.random() * 21, 
         yOffset: (Math.random() - 0.5) * 14,
-        speedFactor: 0.8 + Math.random() * 0.5
+        speedFactor: 0.8 + Math.random() * 0.5,
+        currentExpansion: 1.0
     };
     
     mesh.scale.set(0.01, 0.01, 0.01);
@@ -1225,6 +1254,31 @@ function animate() {
     const delta = clock.getDelta();
     const time = clock.getElapsedTime();
 
+    // Cosmic Zoom Flyby Animation from near to far
+    if (zoomAnimation.active) {
+        const elapsed = time - zoomAnimation.startTime;
+        const progress = Math.min(1.0, elapsed / zoomAnimation.duration);
+        // Smooth exponential ease-out
+        const ease = 1 - Math.pow(1 - progress, 3.5);
+
+        camera.position.lerpVectors(zoomAnimation.startPos, zoomAnimation.targetPos, ease);
+        camera.lookAt(0, 0, 0);
+
+        // Smoothly expand photos from center to orbit radius
+        photoMeshes.forEach(mesh => {
+            mesh.userData.currentExpansion = THREE.MathUtils.lerp(0.05, 1.0, ease);
+            const targetScale = mesh.userData.isBadge ? 1.0 : CONFIG.photoSize;
+            const scaleVal = THREE.MathUtils.lerp(0.01, targetScale, ease);
+            mesh.scale.set(scaleVal, scaleVal, scaleVal);
+        });
+
+        if (progress >= 1.0) {
+            zoomAnimation.active = false;
+            controls.target.set(0, 0, 0);
+            controls.update();
+        }
+    }
+
     if (time - lastShootingStarTime > 2.8 + Math.random() * 2.2) {
         spawnShootingStar();
         lastShootingStarTime = time;
@@ -1250,16 +1304,19 @@ function animate() {
     photoMeshes.forEach((mesh) => {
         const speed = (mesh.userData.speedFactor || 1.0) * CONFIG.orbitSpeed;
         const angle = mesh.userData.angleOffset + time * 0.15 * speed;
-        const radius = mesh.userData.radiusOffset * (CONFIG.orbitRadius / 28);
+        const expansion = mesh.userData.currentExpansion !== undefined ? mesh.userData.currentExpansion : 1.0;
+        const radius = mesh.userData.radiusOffset * (CONFIG.orbitRadius / 28) * expansion;
 
         mesh.position.x = Math.cos(angle) * radius;
         mesh.position.z = Math.sin(angle) * radius;
-        mesh.position.y = mesh.userData.yOffset + Math.sin(time * 1.5 + mesh.userData.angleOffset) * 0.8;
+        mesh.position.y = (mesh.userData.yOffset + Math.sin(time * 1.5 + mesh.userData.angleOffset) * 0.8) * expansion;
 
         mesh.lookAt(camera.position);
 
-        const baseScale = mesh.userData.isBadge ? 1.0 : CONFIG.photoSize;
-        mesh.scale.set(baseScale, baseScale, baseScale);
+        if (!zoomAnimation.active) {
+            const baseScale = mesh.userData.isBadge ? 1.0 : CONFIG.photoSize;
+            mesh.scale.set(baseScale, baseScale, baseScale);
+        }
     });
 
     if (starField) {
@@ -1275,7 +1332,9 @@ function animate() {
         meteoriteRing2.rotation.y = -time * 0.16 * CONFIG.meteorSpeed * meteorDir;
     }
 
-    controls.update();
+    if (!zoomAnimation.active) {
+        controls.update();
+    }
     renderer.render(scene, camera);
 }
 
@@ -1640,6 +1699,7 @@ function initEvents() {
             createSparklingHeart();
             createMeteoriteRings();
             initOrbitItems();
+            triggerCosmicZoomAnimation();
             showToast("Đã khôi phục cài đặt mặc định 💫");
         });
     }
