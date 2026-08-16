@@ -11,8 +11,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Official FreeImage.host Upload SDK (PUP Plugin) -->
-    <script async src="https://freeimage.host/sdk/pup.js" data-url="https://freeimage.host/upload" data-auto-insert="direct-links"></script>
     <style>
         :root {
             --bg-dark: #07040d;
@@ -638,6 +636,19 @@
             transform: translateY(-1px);
         }
 
+        .btn-host-upload {
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            border-color: #38bdf8;
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+        }
+
+        .btn-host-upload:hover {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            border-color: #7dd3fc;
+            box-shadow: 0 6px 18px rgba(14, 165, 233, 0.6);
+        }
+
         .btn-host-freeimage {
             background: linear-gradient(135deg, rgba(255, 42, 133, 0.25), rgba(157, 78, 221, 0.35));
             border-color: rgba(255, 42, 133, 0.6);
@@ -649,6 +660,14 @@
             background: linear-gradient(135deg, #ff2a85, #9d4edd);
             color: #ffffff;
             box-shadow: 0 6px 18px rgba(255, 42, 133, 0.5);
+        }
+
+        .upload-status-text {
+            font-size: 0.83rem;
+            font-weight: 600;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            display: none;
         }
 
         .upload-preview-container {
@@ -890,12 +909,17 @@
                     <div class="upload-section">
                         <div class="upload-actions-bar">
                             <span style="font-size: 0.83rem; color: #ff9ec6; font-weight: 600;">
-                                <i class="fa-solid fa-cloud-arrow-up"></i> Tải ảnh qua FreeImage.host API:
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Tải ảnh từ máy tính / Web:
                             </span>
                             <div class="upload-btn-group">
+                                <input type="file" id="file_new-anh" accept="image/*" multiple style="display:none;" onchange="handleFileUpload(this, 'new-anh', 'new-preview-strip', 'status_new-anh')">
+                                <button type="button" class="btn-host-link btn-host-upload" onclick="document.getElementById('file_new-anh').click()">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    <span>Tải ảnh lên (Máy tính)</span>
+                                </button>
                                 <button type="button" class="btn-host-link btn-host-freeimage" onclick="openHostUploader('freeimage', 'new-anh')">
                                     <i class="fa-solid fa-cloud-arrow-up"></i>
-                                    <span>Tải Lên FreeImage.host API</span>
+                                    <span>FreeImage.host</span>
                                 </button>
                                 <button type="button" class="btn-host-link" onclick="openHostUploader('postimages', 'new-anh')">
                                     <i class="fa-solid fa-arrow-up-right-from-square"></i>
@@ -904,7 +928,9 @@
                             </div>
                         </div>
 
-                        <textarea id="new-anh" class="form-control" rows="2" placeholder="Tải ảnh lên FreeImage.host rồi link sẽ tự động chèn vào đây (hoặc dán nhiều link ngăn cách bằng dấu |)"></textarea>
+                        <div id="status_new-anh" class="upload-status-text"></div>
+
+                        <textarea id="new-anh" class="form-control" rows="2" placeholder="Bấm 'Tải ảnh lên' để chọn ảnh từ máy tính hoặc dán link ảnh vào đây (nhiều ảnh ngăn cách bằng dấu |)"></textarea>
                         
                         <div id="new-preview-strip" class="upload-preview-container"></div>
                     </div>
@@ -993,12 +1019,17 @@
                     <div class="upload-section">
                         <div class="upload-actions-bar">
                             <span style="font-size: 0.83rem; color: #ff9ec6; font-weight: 600;">
-                                <i class="fa-solid fa-cloud-arrow-up"></i> Tải ảnh qua FreeImage.host API:
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Tải ảnh từ máy tính / Web:
                             </span>
                             <div class="upload-btn-group">
+                                <input type="file" id="file_edit-anh" accept="image/*" multiple style="display:none;" onchange="handleFileUpload(this, 'edit-anh', 'edit-preview-strip', 'status_edit-anh')">
+                                <button type="button" class="btn-host-link btn-host-upload" onclick="document.getElementById('file_edit-anh').click()">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    <span>Tải ảnh lên (Máy tính)</span>
+                                </button>
                                 <button type="button" class="btn-host-link btn-host-freeimage" onclick="openHostUploader('freeimage', 'edit-anh')">
                                     <i class="fa-solid fa-cloud-arrow-up"></i>
-                                    <span>Tải Lên FreeImage.host API</span>
+                                    <span>FreeImage.host</span>
                                 </button>
                                 <button type="button" class="btn-host-link" onclick="openHostUploader('postimages', 'edit-anh')">
                                     <i class="fa-solid fa-arrow-up-right-from-square"></i>
@@ -1007,7 +1038,9 @@
                             </div>
                         </div>
 
-                        <textarea id="edit-anh" class="form-control" rows="2" placeholder="Link ảnh ngăn cách bằng dấu |"></textarea>
+                        <div id="status_edit-anh" class="upload-status-text"></div>
+
+                        <textarea id="edit-anh" class="form-control" rows="2" placeholder="Bấm 'Tải ảnh lên' để chọn ảnh từ máy tính hoặc dán link ảnh vào đây (nhiều ảnh ngăn cách bằng dấu |)"></textarea>
                         
                         <div id="edit-preview-strip" class="upload-preview-container"></div>
                     </div>
@@ -1187,14 +1220,15 @@
             }
         }
 
-        // Smart Format and Clean Image URLs (FreeImage.host, Postimages, ImgBB, Google Drive, BBCode, HTML)
+        // Format any single image URL to direct high-res image URL
         function formatImageUrl(url) {
             if (!url || typeof url !== 'string') return '';
             url = url.trim();
 
-            // Strip BBCode [img]...[/img] or [url]...[/url]
+            // Strip BBCode [img]...[/img], markdown ![](url), html tags
             url = url.replace(/\[img\](.*?)\[\/img\]/gi, '$1')
                      .replace(/\[url.*?\](.*?)\[\/url\]/gi, '$1')
+                     .replace(/!\[.*?\]\((.*?)\)/g, '$1')
                      .replace(/<img.*?src=["'](.*?)["'].*?>/gi, '$1')
                      .replace(/<a.*?href=["'](.*?)["'].*?>/gi, '$1')
                      .trim();
@@ -1223,6 +1257,140 @@
             return url;
         }
 
+        // Smart parser to extract all unique image URLs from any text format
+        function parseImageLinks(text) {
+            if (!text || typeof text !== 'string') return [];
+            
+            // Clean common markdown/bbcode/html wrapper noise
+            let cleaned = text
+                .replace(/\[img\](.*?)\[\/img\]/gi, '$1 ')
+                .replace(/\[url.*?\](.*?)\[\/url\]/gi, '$1 ')
+                .replace(/!\[.*?\]\((.*?)\)/g, '$1 ')
+                .replace(/<img.*?src=["'](.*?)["'].*?>/gi, '$1 ')
+                .replace(/<a.*?href=["'](.*?)["'].*?>/gi, '$1 ');
+
+            // Split by |, newlines, commas, or whitespace sequences
+            const rawTokens = cleaned.split(/[|\n\r,]+|\s{2,}/);
+            const seen = new Set();
+            const result = [];
+
+            for (let token of rawTokens) {
+                token = token.trim();
+                if (!token) continue;
+
+                if (token.startsWith('http://') || token.startsWith('https://')) {
+                    const formatted = formatImageUrl(token);
+                    if (formatted && !seen.has(formatted)) {
+                        seen.add(formatted);
+                        result.push(formatted);
+                    }
+                }
+            }
+            return result;
+        }
+
+        // Upload a single file using ImgBB / FreeImage API
+        async function uploadSingleImage(file) {
+            // 1. Try ImgBB API (using active project key)
+            try {
+                const IMGBB_KEY = '1bad1429a242d7040fda3f2cfddb3a25';
+                const formData = new FormData();
+                formData.append('image', file);
+                const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success && data.data && data.data.url) {
+                    return data.data.url;
+                }
+            } catch (err) {
+                console.warn("ImgBB upload error, attempting FreeImage...", err);
+            }
+
+            // 2. Try FreeImage.host API
+            try {
+                const formData2 = new FormData();
+                formData2.append('key', '6d207e02198a847aa98d0a2a901485a5');
+                formData2.append('action', 'upload');
+                formData2.append('source', file);
+                formData2.append('format', 'json');
+                const res2 = await fetch('https://freeimage.host/api/1/upload', {
+                    method: 'POST',
+                    body: formData2
+                });
+                const data2 = await res2.json();
+                if (data2.status_code === 200 && data2.image && data2.image.url) {
+                    return data2.image.url;
+                }
+            } catch (err2) {
+                console.warn("FreeImage API upload error:", err2);
+            }
+
+            throw new Error(`Tải ảnh ${file.name} thất bại.`);
+        }
+
+        // Handle multi-file upload from computer with real-time status and preview
+        async function handleFileUpload(fileInput, targetTextareaId, previewContainerId, statusSpanId) {
+            if (!fileInput.files || fileInput.files.length === 0) return;
+            
+            const files = Array.from(fileInput.files);
+            const totalFiles = files.length;
+            const statusSpan = document.getElementById(statusSpanId);
+            const targetTextarea = document.getElementById(targetTextareaId);
+            const container = document.getElementById(previewContainerId);
+
+            if (statusSpan) {
+                statusSpan.style.display = 'block';
+                statusSpan.style.color = '#38bdf8';
+                statusSpan.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang tải lên 0/${totalFiles} ảnh...`;
+            }
+
+            let successCount = 0;
+            let failedCount = 0;
+            let currentLinks = parseImageLinks(targetTextarea ? targetTextarea.value : '');
+
+            for (let i = 0; i < totalFiles; i++) {
+                const file = files[i];
+                if (statusSpan) {
+                    statusSpan.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang tải ảnh ${i + 1}/${totalFiles} (${file.name})...`;
+                }
+
+                try {
+                    const directUrl = await uploadSingleImage(file);
+                    if (directUrl && !currentLinks.includes(directUrl)) {
+                        currentLinks.push(directUrl);
+                        successCount++;
+                        if (targetTextarea) {
+                            targetTextarea.value = currentLinks.join(' | ');
+                            renderThumbnailStrip(targetTextarea, container);
+                        }
+                    }
+                } catch (err) {
+                    console.error(`Lỗi tải file:`, err);
+                    failedCount++;
+                }
+            }
+
+            if (statusSpan) {
+                if (failedCount === 0) {
+                    statusSpan.style.color = '#10b981';
+                    statusSpan.innerHTML = `<i class="fa-solid fa-circle-check"></i> Đã tải thành công ${successCount} ảnh!`;
+                } else {
+                    statusSpan.style.color = '#f59e0b';
+                    statusSpan.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Tải xong ${successCount} ảnh (${failedCount} ảnh lỗi)`;
+                }
+                setTimeout(() => {
+                    if (statusSpan) statusSpan.style.display = 'none';
+                }, 4000);
+            }
+
+            fileInput.value = ""; // Reset file input
+            if (successCount > 0) {
+                showToast(`Đã tải lên ${successCount} ảnh từ máy tính! 📸`);
+            }
+        }
+
         // Show quick toast notification
         function showToast(msg, isError = false) {
             const existing = document.querySelector('.toast');
@@ -1245,7 +1413,7 @@
             const top = (window.innerHeight - h) / 2;
 
             let url = 'https://freeimage.host/upload';
-            let title = 'FreeImage.host API';
+            let title = 'FreeImage.host';
 
             if (type === 'postimages') {
                 url = 'https://postimages.org/';
@@ -1253,7 +1421,7 @@
             }
 
             window.open(url, 'HostUploadPopup', `width=${w},height=${h},top=${top},left=${left}`);
-            showToast(`Đã mở ${title}: Tải ảnh xong link sẽ tự động đồng bộ vào ô! 📸`);
+            showToast(`Đã mở ${title}: Bạn có thể tải ảnh rồi copy link dán vào ô! 📸`);
         }
 
         // Automatically catch FreeImage.host API postMessage event when image upload completes
@@ -1272,13 +1440,21 @@
                 const targetStrip = activeTargetTextareaId === 'new-anh' ? document.getElementById('new-preview-strip') : document.getElementById('edit-preview-strip');
 
                 if (targetTextarea && targetStrip) {
-                    const cleanUrl = formatImageUrl(msg);
-                    let currentList = targetTextarea.value ? targetTextarea.value.split('|').map(s => s.trim()).filter(Boolean) : [];
-                    if (!currentList.includes(cleanUrl)) {
-                        currentList.push(cleanUrl);
-                        targetTextarea.value = currentList.join(' | ');
+                    const newUrls = parseImageLinks(msg);
+                    let currentLinks = parseImageLinks(targetTextarea.value);
+
+                    let added = 0;
+                    newUrls.forEach(url => {
+                        if (!currentLinks.includes(url)) {
+                            currentLinks.push(url);
+                            added++;
+                        }
+                    });
+
+                    if (added > 0) {
+                        targetTextarea.value = currentLinks.join(' | ');
                         renderThumbnailStrip(targetTextarea, targetStrip);
-                        showToast(`Đã nhận ảnh mới từ FreeImage.host! 💖`);
+                        showToast(`Đã nhận ${added} ảnh mới! 💖`);
                     }
                 }
             }
@@ -1286,23 +1462,23 @@
 
         // Render interactive thumbnail strip for textarea
         function renderThumbnailStrip(textareaEl, containerEl) {
+            if (!containerEl) return;
             containerEl.innerHTML = '';
-            const rawUrls = textareaEl.value ? textareaEl.value.split('|').map(s => s.trim()).filter(Boolean) : [];
+            const urls = parseImageLinks(textareaEl ? textareaEl.value : '');
 
-            rawUrls.forEach((rawUrl, idx) => {
-                const directUrl = formatImageUrl(rawUrl);
+            urls.forEach((directUrl, idx) => {
                 const item = document.createElement('div');
                 item.className = 'upload-preview-item';
                 item.innerHTML = `
-                    <img src="${directUrl}" alt="Thumb" onclick="openPreview('${directUrl}')" title="Click xem ảnh to">
+                    <img src="${directUrl}" alt="Thumb" onclick="openPreview('${directUrl}')" title="Click xem ảnh to" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22><rect fill=%22%23222%22 width=%2250%22 height=%2250%22/><text fill=%22%23aaa%22 x=%2250%%22 y=%2250%%22 font-size=%229%22 text-anchor=%22middle%22 dy=%22.3em%22>Ảnh lỗi</text></svg>'">
                     <button type="button" class="upload-preview-remove" title="Xóa ảnh này"><i class="fa-solid fa-xmark"></i></button>
                 `;
 
                 // Remove image on click
                 item.querySelector('.upload-preview-remove').addEventListener('click', (e) => {
                     e.stopPropagation();
-                    rawUrls.splice(idx, 1);
-                    textareaEl.value = rawUrls.join(' | ');
+                    urls.splice(idx, 1);
+                    textareaEl.value = urls.join(' | ');
                     renderThumbnailStrip(textareaEl, containerEl);
                 });
 
@@ -1565,7 +1741,7 @@
             };
 
             data.forEach((item, idx) => {
-                const anhList = item.anh ? item.anh.split('|').map(s => formatImageUrl(s)).filter(Boolean) : [];
+                const anhList = item.anh ? parseImageLinks(item.anh) : [];
                 const textList = item.cau_text ? item.cau_text.split('|').map(s => s.trim()).filter(Boolean) : [];
 
                 // Photos HTML
@@ -1727,6 +1903,11 @@
                 newAnhTextarea.addEventListener('input', () => {
                     renderThumbnailStrip(newAnhTextarea, newPreviewStrip);
                 });
+                newAnhTextarea.addEventListener('blur', () => {
+                    const parsed = parseImageLinks(newAnhTextarea.value);
+                    if (parsed.length > 0) newAnhTextarea.value = parsed.join(' | ');
+                    renderThumbnailStrip(newAnhTextarea, newPreviewStrip);
+                });
             }
 
             // Form Submit: Append to Google Sheet
@@ -1735,7 +1916,7 @@
                     e.preventDefault();
 
                     const newId = document.getElementById('new-id').value.trim();
-                    const newAnh = newAnhTextarea.value.trim();
+                    const newAnh = parseImageLinks(newAnhTextarea.value).join(' | ');
                     const newText = document.getElementById('new-text').value.trim();
                     const newShape = document.getElementById('new-shape').value;
                     const newColor = document.getElementById('new-color').value;
@@ -1825,6 +2006,11 @@
                 editAnhTextarea.addEventListener('input', () => {
                     renderThumbnailStrip(editAnhTextarea, editPreviewStrip);
                 });
+                editAnhTextarea.addEventListener('blur', () => {
+                    const parsed = parseImageLinks(editAnhTextarea.value);
+                    if (parsed.length > 0) editAnhTextarea.value = parsed.join(' | ');
+                    renderThumbnailStrip(editAnhTextarea, editPreviewStrip);
+                });
             }
 
             // Form Submit: Update Google Sheet Row
@@ -1834,7 +2020,7 @@
 
                     const rowNum = parseInt(document.getElementById('edit-row-number').value, 10);
                     const editId = document.getElementById('edit-id').value.trim();
-                    const editAnh = editAnhTextarea.value.trim();
+                    const editAnh = parseImageLinks(editAnhTextarea.value).join(' | ');
                     const editText = document.getElementById('edit-text').value.trim();
                     const editShape = document.getElementById('edit-shape').value;
                     const editColor = document.getElementById('edit-color').value;

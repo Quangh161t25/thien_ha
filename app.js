@@ -200,10 +200,18 @@ async function getGoogleAccessToken() {
     }
 }
 
-// Convert Google Drive & direct URLs to super fast high-res thumbnail URLs
+// Convert Google Drive, FreeImage, Postimages & direct URLs to high-res image URLs
 function formatImageUrl(url) {
     if (!url || typeof url !== 'string') return '';
     url = url.trim();
+
+    // Strip BBCode or HTML tags if present
+    url = url.replace(/\[img\](.*?)\[\/img\]/gi, '$1')
+             .replace(/\[url.*?\](.*?)\[\/url\]/gi, '$1')
+             .replace(/!\[.*?\]\((.*?)\)/g, '$1')
+             .replace(/<img.*?src=["'](.*?)["'].*?>/gi, '$1')
+             .replace(/<a.*?href=["'](.*?)["'].*?>/gi, '$1')
+             .trim();
 
     if (url.includes('drive.google.com')) {
         const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
@@ -212,6 +220,18 @@ function formatImageUrl(url) {
             return `https://drive.google.com/thumbnail?id=${fileIdMatch[1]}&sz=w1000`;
         }
     }
+
+    if (url.includes('freeimage.host/i/')) {
+        const match = url.match(/freeimage\.host\/i\/([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+            return `https://iili.io/${match[1]}.jpg`;
+        }
+    }
+
+    if (url.includes('iili.io') && url.includes('.th.')) {
+        url = url.replace('.th.', '.');
+    }
+
     return url;
 }
 
