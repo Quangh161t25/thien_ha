@@ -609,15 +609,56 @@
             color: #0f172a;
         }
 
-        /* Upload Toolbar */
+        /* Upload Drag & Drop & Paste Toolbar */
         .upload-section {
             background: #f8fafc;
-            border: 1px dashed #cbd5e1;
-            border-radius: var(--radius-sm);
-            padding: 12px 14px;
+            border: 2px dashed #cbd5e1;
+            border-radius: var(--radius-md);
+            padding: 14px;
             display: flex;
             flex-direction: column;
             gap: 10px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .upload-section.drag-over {
+            background: #f0f9ff !important;
+            border-color: #0284c7 !important;
+            box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.18) !important;
+            transform: scale(1.008);
+        }
+
+        .upload-drag-banner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 14px;
+            background: #ffffff;
+            border: 1px dashed #cbd5e1;
+            border-radius: var(--radius-sm);
+            color: #64748b;
+            font-size: 0.83rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .upload-drag-banner:hover {
+            border-color: #0284c7;
+            color: #0284c7;
+            background: #f0f9ff;
+        }
+
+        .upload-drag-banner kbd {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.76rem;
+            color: #0284c7;
+            font-weight: 700;
         }
 
         .upload-actions-bar {
@@ -834,6 +875,10 @@
                     <i class="fa-solid fa-arrows-rotate"></i>
                     <span>Làm mới</span>
                 </button>
+                <a href="tim_tro.html" class="btn btn-secondary" title="Mở Sổ Tay Tìm Phòng Trọ">
+                    <i class="fa-solid fa-house-chimney-user"></i>
+                    <span>Tìm Trọ</span>
+                </a>
                 <a href="index.html" target="_blank" class="btn btn-secondary" title="Mở mô hình 3D">
                     <i class="fa-solid fa-atom"></i>
                     <span>Mở Vũ Trụ 3D</span>
@@ -910,23 +955,28 @@
                 <div class="form-group">
                     <label for="new-anh"><i class="fa-solid fa-images"></i> Link Ảnh (Cột B)</label>
                     
-                    <div class="upload-section">
+                    <div class="upload-section" id="dropzone_new-anh">
                         <div class="upload-actions-bar">
                             <span style="font-size: 0.85rem; color: #475569; font-weight: 600;">
-                                <i class="fa-solid fa-cloud-arrow-up" style="color: #0284c7;"></i> Tải ảnh từ máy tính:
+                                <i class="fa-solid fa-cloud-arrow-up" style="color: #0284c7;"></i> Tải ảnh (Hỗ trợ kéo thả & Ctrl+V):
                             </span>
                             <div class="upload-btn-group">
-                                <input type="file" id="file_new-anh" accept="image/*" multiple style="display:none;" onchange="handleFileUpload(this, 'new-anh', 'new-preview-strip', 'status_new-anh')">
+                                <input type="file" id="file_new-anh" accept="image/*" multiple style="display:none;" onchange="handleFileInputChange(this, 'new-anh', 'new-preview-strip', 'status_new-anh')">
                                 <button type="button" class="btn-host-upload" onclick="document.getElementById('file_new-anh').click()">
                                     <i class="fa-solid fa-cloud-arrow-up"></i>
-                                    <span>Tải ảnh lên (Máy tính)</span>
+                                    <span>Tải ảnh lên</span>
                                 </button>
                             </div>
                         </div>
 
+                        <div class="upload-drag-banner" onclick="document.getElementById('file_new-anh').click()" title="Bấm để chọn ảnh, hoặc kéo thả ảnh / bấm Ctrl+V để dán ảnh">
+                            <i class="fa-solid fa-image" style="font-size: 1.1rem; color: #0284c7;"></i>
+                            <span>Kéo & thả ảnh vào đây, hoặc bấm <kbd>Ctrl + V</kbd> để dán ảnh / link</span>
+                        </div>
+
                         <div id="status_new-anh" class="upload-status-text"></div>
 
-                        <textarea id="new-anh" class="form-control" rows="2" placeholder="Bấm 'Tải ảnh lên' để chọn ảnh từ máy tính hoặc dán link ảnh vào đây (nhiều ảnh ngăn cách bằng dấu |)"></textarea>
+                        <textarea id="new-anh" class="form-control" rows="2" placeholder="Bấm 'Tải ảnh lên', kéo thả ảnh, hoặc dán ảnh (Ctrl+V) / dán link (ngăn cách bằng dấu |)"></textarea>
                         
                         <div id="new-preview-strip" class="upload-preview-container"></div>
                     </div>
@@ -1012,23 +1062,28 @@
                 <div class="form-group">
                     <label for="edit-anh"><i class="fa-solid fa-images"></i> Link Ảnh (Cột B)</label>
                     
-                    <div class="upload-section">
+                    <div class="upload-section" id="dropzone_edit-anh">
                         <div class="upload-actions-bar">
                             <span style="font-size: 0.85rem; color: #475569; font-weight: 600;">
-                                <i class="fa-solid fa-cloud-arrow-up" style="color: #0284c7;"></i> Tải ảnh từ máy tính:
+                                <i class="fa-solid fa-cloud-arrow-up" style="color: #0284c7;"></i> Tải ảnh (Hỗ trợ kéo thả & Ctrl+V):
                             </span>
                             <div class="upload-btn-group">
-                                <input type="file" id="file_edit-anh" accept="image/*" multiple style="display:none;" onchange="handleFileUpload(this, 'edit-anh', 'edit-preview-strip', 'status_edit-anh')">
+                                <input type="file" id="file_edit-anh" accept="image/*" multiple style="display:none;" onchange="handleFileInputChange(this, 'edit-anh', 'edit-preview-strip', 'status_edit-anh')">
                                 <button type="button" class="btn-host-upload" onclick="document.getElementById('file_edit-anh').click()">
                                     <i class="fa-solid fa-cloud-arrow-up"></i>
-                                    <span>Tải ảnh lên (Máy tính)</span>
+                                    <span>Tải ảnh lên</span>
                                 </button>
                             </div>
                         </div>
 
+                        <div class="upload-drag-banner" onclick="document.getElementById('file_edit-anh').click()" title="Bấm để chọn ảnh, hoặc kéo thả ảnh / bấm Ctrl+V để dán ảnh">
+                            <i class="fa-solid fa-image" style="font-size: 1.1rem; color: #0284c7;"></i>
+                            <span>Kéo & thả ảnh vào đây, hoặc bấm <kbd>Ctrl + V</kbd> để dán ảnh / link</span>
+                        </div>
+
                         <div id="status_edit-anh" class="upload-status-text"></div>
 
-                        <textarea id="edit-anh" class="form-control" rows="2" placeholder="Bấm 'Tải ảnh lên' để chọn ảnh từ máy tính hoặc dán link ảnh vào đây (nhiều ảnh ngăn cách bằng dấu |)"></textarea>
+                        <textarea id="edit-anh" class="form-control" rows="2" placeholder="Bấm 'Tải ảnh lên', kéo thả ảnh, hoặc dán ảnh (Ctrl+V) / dán link (ngăn cách bằng dấu |)"></textarea>
                         
                         <div id="edit-preview-strip" class="upload-preview-container"></div>
                     </div>
@@ -1318,19 +1373,26 @@
             throw new Error(`Tải ảnh ${file.name} thất bại.`);
         }
 
-        // Handle multi-file upload from computer with real-time status and preview
-        async function handleFileUpload(fileInput, targetTextareaId, previewContainerId, statusSpanId) {
-            if (!fileInput.files || fileInput.files.length === 0) return;
+        // Handle multi-file upload from FileList, Array, or Drag & Drop / Clipboard
+        async function handleFilesUpload(filesList, targetTextareaId, previewContainerId, statusSpanId) {
+            if (!filesList || filesList.length === 0) return;
             
-            const files = Array.from(fileInput.files);
-            const totalFiles = files.length;
+            const rawFiles = Array.from(filesList);
+            const imageFiles = rawFiles.filter(f => f.type && f.type.startsWith('image/'));
+            
+            if (imageFiles.length === 0) {
+                showToast("Vui lòng chọn hoặc dán file hình ảnh hợp lệ!", true);
+                return;
+            }
+
+            const totalFiles = imageFiles.length;
             const statusSpan = document.getElementById(statusSpanId);
             const targetTextarea = document.getElementById(targetTextareaId);
             const container = document.getElementById(previewContainerId);
 
             if (statusSpan) {
                 statusSpan.style.display = 'block';
-                statusSpan.style.color = '#38bdf8';
+                statusSpan.style.color = '#0284c7';
                 statusSpan.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang tải lên 0/${totalFiles} ảnh...`;
             }
 
@@ -1339,9 +1401,9 @@
             let currentLinks = parseImageLinks(targetTextarea ? targetTextarea.value : '');
 
             for (let i = 0; i < totalFiles; i++) {
-                const file = files[i];
+                const file = imageFiles[i];
                 if (statusSpan) {
-                    statusSpan.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang tải ảnh ${i + 1}/${totalFiles} (${file.name})...`;
+                    statusSpan.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang tải ảnh ${i + 1}/${totalFiles} (${file.name || 'ảnh clipboard'})...`;
                 }
 
                 try {
@@ -1373,10 +1435,16 @@
                 }, 4000);
             }
 
-            fileInput.value = ""; // Reset file input
             if (successCount > 0) {
-                showToast(`Đã tải lên ${successCount} ảnh từ máy tính! 📸`);
+                showToast(`Đã tải lên ${successCount} ảnh thành công! 📸`);
             }
+        }
+
+        // Bridge for file input onchange
+        function handleFileInputChange(fileInput, targetTextareaId, previewContainerId, statusSpanId) {
+            if (!fileInput.files || fileInput.files.length === 0) return;
+            handleFilesUpload(fileInput.files, targetTextareaId, previewContainerId, statusSpanId);
+            fileInput.value = "";
         }
 
         // Show quick toast notification
@@ -1851,6 +1919,121 @@
 
             renderTable(filtered);
         });
+
+        // Setup Drag and Drop on dropzone elements
+        function setupDropZone(dropZoneId, fileInputId, targetTextareaId, previewContainerId, statusSpanId) {
+            const dropZone = document.getElementById(dropZoneId);
+            if (!dropZone) return;
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.add('drag-over');
+                }, false);
+            });
+
+            ['dragleave', 'dragend'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.remove('drag-over');
+                }, false);
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('drag-over');
+
+                const dt = e.dataTransfer;
+                if (dt && dt.files && dt.files.length > 0) {
+                    handleFilesUpload(dt.files, targetTextareaId, previewContainerId, statusSpanId);
+                } else if (dt) {
+                    const text = dt.getData('text/plain') || dt.getData('text/html') || '';
+                    if (text) {
+                        const links = parseImageLinks(text);
+                        if (links.length > 0) {
+                            const targetTextarea = document.getElementById(targetTextareaId);
+                            const container = document.getElementById(previewContainerId);
+                            let currentLinks = parseImageLinks(targetTextarea ? targetTextarea.value : '');
+                            links.forEach(l => {
+                                if (!currentLinks.includes(l)) currentLinks.push(l);
+                            });
+                            if (targetTextarea) {
+                                targetTextarea.value = currentLinks.join(' | ');
+                                renderThumbnailStrip(targetTextarea, container);
+                            }
+                            showToast(`Đã thêm ${links.length} link ảnh kéo thả vào! 📸`);
+                        }
+                    }
+                }
+            }, false);
+        }
+
+        // Global Paste (Ctrl + V) Handler
+        document.addEventListener('paste', async (e) => {
+            const isAddModalOpen = document.getElementById('add-modal')?.classList.contains('open');
+            const isEditModalOpen = document.getElementById('edit-modal')?.classList.contains('open');
+
+            if (!isAddModalOpen && !isEditModalOpen) return;
+
+            const targetTextareaId = isEditModalOpen ? 'edit-anh' : 'new-anh';
+            const previewContainerId = isEditModalOpen ? 'edit-preview-strip' : 'new-preview-strip';
+            const statusSpanId = isEditModalOpen ? 'status_edit-anh' : 'status_new-anh';
+
+            const clipboardData = e.clipboardData || window.clipboardData;
+            if (!clipboardData) return;
+
+            // 1. Check for image files in clipboard (e.g. screenshot or copied image file)
+            const items = clipboardData.items;
+            const pastedImageFiles = [];
+
+            if (items) {
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type && items[i].type.startsWith('image/')) {
+                        const file = items[i].getAsFile();
+                        if (file) pastedImageFiles.push(file);
+                    }
+                }
+            }
+
+            if (pastedImageFiles.length > 0) {
+                e.preventDefault();
+                showToast(`Đang tải lên ${pastedImageFiles.length} ảnh dán từ clipboard (Ctrl+V)... 📋`);
+                await handleFilesUpload(pastedImageFiles, targetTextareaId, previewContainerId, statusSpanId);
+                return;
+            }
+
+            // 2. Check for text with image URLs
+            const pastedText = clipboardData.getData('text/plain') || '';
+            const links = parseImageLinks(pastedText);
+            if (links.length > 0) {
+                const activeEl = document.activeElement;
+                if (activeEl && (activeEl.id === 'new-anh' || activeEl.id === 'edit-anh' || !['INPUT', 'TEXTAREA'].includes(activeEl.tagName))) {
+                    e.preventDefault();
+                    const targetTextarea = document.getElementById(targetTextareaId);
+                    const container = document.getElementById(previewContainerId);
+                    let currentLinks = parseImageLinks(targetTextarea ? targetTextarea.value : '');
+                    links.forEach(l => {
+                        if (!currentLinks.includes(l)) currentLinks.push(l);
+                    });
+                    if (targetTextarea) {
+                        targetTextarea.value = currentLinks.join(' | ');
+                        renderThumbnailStrip(targetTextarea, container);
+                    }
+                    showToast(`Đã thêm ${links.length} ảnh từ liên kết dán vào (Ctrl+V)! 📸`);
+                }
+            }
+        });
+
+        // Initialize dropzones
+        setupDropZone('dropzone_new-anh', 'file_new-anh', 'new-anh', 'new-preview-strip', 'status_new-anh');
+        setupDropZone('dropzone_edit-anh', 'file_edit-anh', 'edit-anh', 'edit-preview-strip', 'status_edit-anh');
+
+        // Prevent browser from opening dropped files anywhere outside dropzone
+        window.addEventListener('dragover', (e) => e.preventDefault(), false);
+        window.addEventListener('drop', (e) => e.preventDefault(), false);
 
         // ----------------------------------------------------
         // ADD NEW MODAL WIRING
