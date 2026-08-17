@@ -73,6 +73,8 @@ const zoomAnimation = {
 
 // Trigger Cosmic Zoom Animation (Camera glides back from near to far)
 function triggerCosmicZoomAnimation() {
+    const isMobile = window.innerWidth <= 768;
+    zoomAnimation.targetPos.set(0, isMobile ? 32 : 30, isMobile ? 68 : 60);
     zoomAnimation.active = true;
     zoomAnimation.startTime = clock.getElapsedTime();
     if (camera) camera.position.copy(zoomAnimation.startPos);
@@ -672,7 +674,8 @@ function initScene() {
     scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x040207, 0.015);
 
-    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const isMobile = window.innerWidth <= 768;
+    camera = new THREE.PerspectiveCamera(isMobile ? 68 : 60, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, 4, 8); // Start close for cosmic zoom animation
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
@@ -683,9 +686,10 @@ function initScene() {
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.rotateSpeed = 0.8;
-    controls.minDistance = 12;
-    controls.maxDistance = 100;
+    controls.rotateSpeed = isMobile ? 0.6 : 0.8;
+    controls.touchAction = 'none';
+    controls.minDistance = 10;
+    controls.maxDistance = 120;
     controls.target.set(0, 0, 0);
     controls.update();
 
@@ -1436,49 +1440,138 @@ function animate() {
 // UI Event Listeners
 function initEvents() {
     window.addEventListener('resize', () => {
+        const isMobile = window.innerWidth <= 768;
+        camera.fov = isMobile ? 68 : 60;
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // Raycast Photo & Badge Click
-    window.addEventListener('click', (event) => {
-        if (event.target.closest('.hud-header, .control-panel, .modal, .toast-container')) return;
+    // Helper to open photo/badge modal
+    function openItemModal(hit) {
+        const photoModal = document.getElementById('photo-modal');
+        const photoWrapper = document.getElementById('modal-photo-wrapper');
+        const badgeCard = document.getElementById('modal-badge-card');
+        const modalImg = document.getElementById('modal-img');
+        const modalBadgeText = document.getElementById('modal-badge-text');
+        const modalTitle = document.getElementById('modal-title');
 
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        if (hit.userData.isPhoto && hit.userData.src) {
+            if (photoWrapper) photoWrapper.style.display = 'block';
+            if (badgeCard) badgeCard.style.display = 'none';
+            if (modalImg) modalImg.src = hit.userData.src;
+            if (modalTitle) modalTitle.style.display = 'none';
+            if (photoModal) photoModal.classList.add('open');
+        } else if (hit.userData.isBadge) {
+            if (photoWrapper) photoWrapper.style.display = 'none';
+            if (badgeCard) badgeCard.style.display = 'flex';
+            if (modalBadgeText) modalBadgeText.innerText = `"${hit.userData.text}"`;
+            if (modalTitle) modalTitle.style.display = 'none';
+            if (photoModal) photoModal.classList.add('open');
+        }
+    }
+
+    function triggerClickBurst(clientX, clientY) {
+        mouse.x = (clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+        const targetPoint = new THREE.Vector3();
+        raycaster.ray.intersectPlane(plane, targetPoint);
+        spawnClickBurst(targetPoint);
+    }
+
+    let lastInteractionTime = 0;
+
+    function handleInteraction(clientX, clientY, target) {
+        const now = Date.now();
+        if (now - lastInteractionTime < 280) return;
+
+        // If target is inside an interactive UI element, let UI handle it
+        if (target && target.closest) {
+            if (target.closest('.btn, #control-panel, .modal-card, .toast-container, .brand')) return;
+        }
+
+        lastInteractionTime = now;
+
+        if (!camera || !scene) return;
+
+        mouse.x = (clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(clientY / window.innerHeight) * 2 + 1;
 
         raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(photoMeshes);
+
+        // 1. Direct Three.js mesh raycast
+        let intersects = raycaster.intersectObjects(photoMeshes, false);
+        let hitObject = null;
 
         if (intersects.length > 0) {
-            const hit = intersects[0].object;
-            const photoModal = document.getElementById('photo-modal');
-            const photoWrapper = document.getElementById('modal-photo-wrapper');
-            const badgeCard = document.getElementById('modal-badge-card');
-            const modalImg = document.getElementById('modal-img');
-            const modalBadgeText = document.getElementById('modal-badge-text');
-            const modalTitle = document.getElementById('modal-title');
+            hitObject = intersects[0].object;
+        } else if (photoMeshes.length > 0) {
+            // 2. Intelligent Proximity Detection (Fuzzy Hitbox for mobile / touch)
+            let closestMesh = null;
+            let minScreenDist = Infinity;
+            const isMobile = window.innerWidth <= 768;
+            const hitThreshold = isMobile ? 65 : 42; // Generous hit radius in screen pixels
 
-            if (hit.userData.isPhoto && hit.userData.src) {
-                if (photoWrapper) photoWrapper.style.display = 'block';
-                if (badgeCard) badgeCard.style.display = 'none';
-                if (modalImg) modalImg.src = hit.userData.src;
-                if (modalTitle) modalTitle.style.display = 'none';
-                if (photoModal) photoModal.classList.add('open');
-            } else if (hit.userData.isBadge) {
-                if (photoWrapper) photoWrapper.style.display = 'none';
-                if (badgeCard) badgeCard.style.display = 'flex';
-                if (modalBadgeText) modalBadgeText.innerText = `"${hit.userData.text}"`;
-                if (modalTitle) modalTitle.style.display = 'none';
-                if (photoModal) photoModal.classList.add('open');
+            const tempV = new THREE.Vector3();
+            photoMeshes.forEach(mesh => {
+                mesh.getWorldPosition(tempV);
+                // Ensure the item is in front of the camera
+                const toMesh = tempV.clone().sub(camera.position);
+                if (raycaster.ray.direction.dot(toMesh) > 0) {
+                    tempV.project(camera);
+                    if (tempV.z < 1) {
+                        const screenX = ((tempV.x + 1) / 2) * window.innerWidth;
+                        const screenY = ((-tempV.y + 1) / 2) * window.innerHeight;
+                        const dist = Math.hypot(screenX - clientX, screenY - clientY);
+                        if (dist < hitThreshold && dist < minScreenDist) {
+                            minScreenDist = dist;
+                            closestMesh = mesh;
+                        }
+                    }
+                }
+            });
+
+            if (closestMesh) {
+                hitObject = closestMesh;
             }
-        } else {
-            const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-            const targetPoint = new THREE.Vector3();
-            raycaster.ray.intersectPlane(plane, targetPoint);
-            spawnClickBurst(targetPoint);
         }
+
+        if (hitObject) {
+            openItemModal(hitObject);
+        } else {
+            triggerClickBurst(clientX, clientY);
+        }
+    }
+
+    // Touch & Pointer Gesture Tracking with OrbitControls Disambiguation
+    let pointerDownPos = { x: 0, y: 0, time: 0 };
+    let isTrackingPointer = false;
+
+    window.addEventListener('pointerdown', (e) => {
+        if (e.isPrimary === false) return;
+        pointerDownPos = { x: e.clientX, y: e.clientY, time: Date.now() };
+        isTrackingPointer = true;
+    }, { passive: true });
+
+    window.addEventListener('pointerup', (e) => {
+        if (!isTrackingPointer) return;
+        isTrackingPointer = false;
+        const dx = e.clientX - pointerDownPos.x;
+        const dy = e.clientY - pointerDownPos.y;
+        const dt = Date.now() - pointerDownPos.time;
+        const dist = Math.hypot(dx, dy);
+
+        // Tap condition: movement <= 20px and tap duration <= 450ms
+        if (dist <= 20 && dt <= 450) {
+            handleInteraction(e.clientX, e.clientY, e.target);
+        }
+    }, { passive: true });
+
+    // Fallback standard click event
+    window.addEventListener('click', (e) => {
+        handleInteraction(e.clientX, e.clientY, e.target);
     });
 
     // Image Upload Input
