@@ -284,6 +284,12 @@ function applyCustomConfig(cfg) {
 
         if (rawShape.includes('tim') || rawShape.includes('heart')) {
             targetShape = 'heart';
+        } else if (rawShape.includes('vo cuc') || rawShape.includes('vô cực') || rawShape.includes('infinity') || rawShape === '8' || rawShape.includes('lemniscate')) {
+            targetShape = 'infinity';
+        } else if (rawShape.includes('chom sao') || rawShape.includes('chòm sao') || rawShape.includes('constellation') || rawShape.includes('hoang dao') || rawShape.includes('hoàng đạo') || rawShape.includes('zodiac')) {
+            targetShape = 'constellation';
+        } else if (rawShape.includes('cay') || rawShape.includes('cây') || rawShape.includes('tree') || rawShape.includes('anh sang') || rawShape.includes('ánh sáng') || rawShape.includes('yggdrasil')) {
+            targetShape = 'tree';
         } else if (rawShape.includes('ngan') || rawShape.includes('ha') || rawShape.includes('spiral') || rawShape.includes('galaxy') || rawShape.includes('xoan')) {
             targetShape = 'spiral';
         } else if (rawShape.includes('tho') || rawShape.includes('saturn') || rawShape.includes('sao tho')) {
@@ -429,8 +435,8 @@ async function fetchGvizData(sheetId, filterIdStr) {
             };
         }
 
-        const anhList = cellAnh ? cellAnh.split('|').map(s => s.trim()).filter(s => s.length > 0) : [];
-        const textList = cellText ? cellText.split('|').map(s => s.trim()).filter(s => s.length > 0) : [];
+        const anhList = cellAnh ? cellAnh.split(/[|\n\r]+/).map(s => s.trim()).filter(s => s.length > 0) : [];
+        const textList = cellText ? cellText.split(/[|\n\r]+/).map(s => s.trim()).filter(s => s.length > 0) : [];
 
         anhList.forEach((rawUrl, photoIdx) => {
             if (rawUrl.startsWith('http') || rawUrl.startsWith('data:')) {
@@ -514,8 +520,8 @@ async function fetchServiceAccountData(sheetId, filterIdStr) {
             };
         }
 
-        const anhList = cellAnh ? cellAnh.split('|').map(s => s.trim()).filter(s => s.length > 0) : [];
-        const textList = cellText ? cellText.split('|').map(s => s.trim()).filter(s => s.length > 0) : [];
+        const anhList = cellAnh ? cellAnh.split(/[|\n\r]+/).map(s => s.trim()).filter(s => s.length > 0) : [];
+        const textList = cellText ? cellText.split(/[|\n\r]+/).map(s => s.trim()).filter(s => s.length > 0) : [];
 
         anhList.forEach((rawUrl, photoIdx) => {
             if (rawUrl.startsWith('http') || rawUrl.startsWith('data:')) {
@@ -616,6 +622,8 @@ function updateOrbitWithSheetData(photos, badges) {
                 currentExpansion: isZooming ? 0.05 : 1.0
             };
             
+            attachHologramAura(mesh, 4.8, 4.8);
+            
             const initScale = isZooming ? 0.01 : CONFIG.photoSize;
             mesh.scale.set(initScale, initScale, initScale);
             orbitGroup.add(mesh);
@@ -648,6 +656,9 @@ function updateOrbitWithSheetData(photos, badges) {
             speedFactor: speedFactor,
             currentExpansion: isZooming ? 0.05 : 1.0
         };
+        
+        attachHologramAura(mesh, 6.4, 2.7);
+
         const initScale = isZooming ? 0.01 : 1.0;
         mesh.scale.set(initScale, initScale, initScale);
         orbitGroup.add(mesh);
@@ -776,6 +787,100 @@ function createSparklingHeart() {
                 x = Math.cos(angle) * radius;
                 y = Math.sin(angle) * (radius * 0.6);
                 z = (Math.random() - 0.5) * 6;
+            }
+        } else if (CONFIG.shape === 'infinity') {
+            // BIỂU TƯỢNG VÔ CỰC 3D (3D LEMNISCATE OF BERNOULLI)
+            if (i < count * 0.80) {
+                const t = Math.random() * Math.PI * 2;
+                const scale = 12.8;
+                const denom = 1 + Math.sin(t) * Math.sin(t);
+                const bx = (scale * Math.cos(t)) / denom;
+                const by = (scale * Math.sin(t) * Math.cos(t) * 1.35) / denom;
+                const bz = Math.sin(t * 2) * 2.8;
+
+                const angle = Math.random() * Math.PI * 2;
+                const tubeRadius = Math.random() * 1.3;
+                x = bx + Math.cos(angle) * tubeRadius;
+                y = by + Math.sin(angle) * tubeRadius;
+                z = bz + (Math.random() - 0.5) * 1.8;
+            } else {
+                const loopSign = Math.random() > 0.5 ? 1 : -1;
+                const r = 2.5 + Math.random() * 5.0;
+                const a = Math.random() * Math.PI * 2;
+                x = loopSign * 6.5 + Math.cos(a) * r;
+                y = Math.sin(a) * (r * 0.7);
+                z = (Math.random() - 0.5) * 4.5;
+            }
+        } else if (CONFIG.shape === 'constellation') {
+            // CHÒM SAO HOÀNG ĐẠO 3D (12 ZODIAC CELESTIAL CLUSTERS)
+            const nodeCount = 12;
+            const nodeIdx = i % nodeCount;
+            const phi = Math.acos(1 - 2 * ((nodeIdx + 0.5) / nodeCount));
+            const theta = Math.PI * (1 + Math.sqrt(5)) * nodeIdx;
+            const radiusSphere = 8.5;
+            const nx = radiusSphere * Math.sin(phi) * Math.cos(theta);
+            const ny = radiusSphere * Math.sin(phi) * Math.sin(theta);
+            const nz = radiusSphere * Math.cos(phi);
+
+            if (i < count * 0.45) {
+                const clusterRadius = Math.pow(Math.random(), 0.6) * 3.2;
+                const cPhi = Math.acos(1 - 2 * Math.random());
+                const cTheta = Math.PI * 2 * Math.random();
+                x = nx + clusterRadius * Math.sin(cPhi) * Math.cos(cTheta);
+                y = ny + clusterRadius * Math.sin(cPhi) * Math.sin(cTheta);
+                z = nz + clusterRadius * Math.cos(cPhi);
+            } else if (i < count * 0.80) {
+                const nextNode = (nodeIdx + 1 + Math.floor(Math.random() * 2)) % nodeCount;
+                const nPhi = Math.acos(1 - 2 * ((nextNode + 0.5) / nodeCount));
+                const nTheta = Math.PI * (1 + Math.sqrt(5)) * nextNode;
+                const nx2 = radiusSphere * Math.sin(nPhi) * Math.cos(nTheta);
+                const ny2 = radiusSphere * Math.sin(nPhi) * Math.sin(nTheta);
+                const nz2 = radiusSphere * Math.cos(nPhi);
+
+                const lerpT = Math.random();
+                const jitter = (Math.random() - 0.5) * 0.7;
+                x = nx + (nx2 - nx) * lerpT + jitter;
+                y = ny + (ny2 - ny) * lerpT + jitter;
+                z = nz + (nz2 - nz) * lerpT + jitter;
+            } else {
+                const sRadius = 7.0 + Math.random() * 5.0;
+                const sPhi = Math.acos(1 - 2 * Math.random());
+                const sTheta = Math.PI * 2 * Math.random();
+                x = sRadius * Math.sin(sPhi) * Math.cos(sTheta);
+                y = sRadius * Math.sin(sPhi) * Math.sin(sTheta);
+                z = sRadius * Math.cos(sPhi);
+            }
+        } else if (CONFIG.shape === 'tree') {
+            // CÂY ÁNH SÁNG 3D (TREE OF LIFE / YGGDRASIL)
+            if (i < count * 0.18) {
+                const branch = i % 5;
+                const rootProgress = Math.random();
+                const baseAngle = (branch / 5) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
+                const r = 1.0 + rootProgress * 8.5;
+                x = Math.cos(baseAngle) * r;
+                y = -2.0 - rootProgress * 5.0 + (Math.random() - 0.5) * 0.8;
+                z = Math.sin(baseAngle) * r;
+            } else if (i < count * 0.45) {
+                const trunkProgress = (i - count * 0.18) / (count * 0.27);
+                const trunkY = -2.0 + trunkProgress * 7.5;
+                const twist = trunkY * 0.8 + (Math.random() - 0.5) * 0.4;
+                const trunkR = (2.2 - trunkProgress * 1.1) * Math.pow(Math.random(), 0.5);
+                x = Math.cos(twist) * trunkR;
+                y = trunkY;
+                z = Math.sin(twist) * trunkR;
+            } else if (i < count * 0.88) {
+                const crownPhi = Math.acos(1 - 2 * Math.random());
+                const crownTheta = Math.PI * 2 * Math.random();
+                const crownR = 3.0 + Math.pow(Math.random(), 0.5) * 6.8;
+                x = crownR * Math.sin(crownPhi) * Math.cos(crownTheta) * 1.25;
+                y = 7.5 + crownR * Math.cos(crownPhi) * 0.95;
+                z = crownR * Math.sin(crownPhi) * Math.sin(crownTheta) * 1.25;
+            } else {
+                const a = Math.random() * Math.PI * 2;
+                const r = 4.0 + Math.random() * 8.0;
+                x = Math.cos(a) * r;
+                y = 2.0 + Math.random() * 12.0;
+                z = Math.sin(a) * r;
             }
         } else if (CONFIG.shape === 'spiral') {
             const arm = i % 4;
@@ -1007,7 +1112,47 @@ function createMeteoriteRings() {
     }
 }
 
-// Create Dynamic Canvas Textures for Love Badges
+// Reusable Rainbow Aura Glow Texture Generator
+let cachedAuraTexture = null;
+function getAuraTexture() {
+    if (cachedAuraTexture) return cachedAuraTexture;
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    
+    const grad = ctx.createRadialGradient(128, 128, 20, 128, 128, 128);
+    grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    grad.addColorStop(0.25, 'rgba(255, 110, 190, 0.85)');
+    grad.addColorStop(0.55, 'rgba(0, 220, 255, 0.5)');
+    grad.addColorStop(0.8, 'rgba(160, 70, 255, 0.2)');
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 256, 256);
+    
+    cachedAuraTexture = new THREE.CanvasTexture(canvas);
+    return cachedAuraTexture;
+}
+
+// Attach Holographic Rainbow Aura Plane behind mesh
+function attachHologramAura(mesh, width = 4.8, height = 4.8) {
+    const auraGeo = new THREE.PlaneGeometry(width, height);
+    const auraMat = new THREE.MeshBasicMaterial({
+        map: getAuraTexture(),
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        opacity: 0.85,
+        side: THREE.DoubleSide
+    });
+    const auraMesh = new THREE.Mesh(auraGeo, auraMat);
+    auraMesh.position.z = -0.04;
+    mesh.add(auraMesh);
+    mesh.userData.auraMesh = auraMesh;
+}
+
+// Create Dynamic Canvas Textures for Love Badges with Hologram Glow
 function createBadgeTexture(text, bgColor = "#ff2a85") {
     const canvas = document.createElement('canvas');
     canvas.width = 1024;
@@ -1016,31 +1161,48 @@ function createBadgeTexture(text, bgColor = "#ff2a85") {
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
-    ctx.fillStyle = 'rgba(15, 8, 20, 0.85)';
-    ctx.strokeStyle = bgColor;
-    ctx.lineWidth = 12;
+    // Prismatic Rainbow Gradient Stroke
+    const rainbowGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    rainbowGrad.addColorStop(0, '#ff007f');
+    rainbowGrad.addColorStop(0.25, '#ffb703');
+    rainbowGrad.addColorStop(0.5, '#00f5d4');
+    rainbowGrad.addColorStop(0.75, '#7b2cbf');
+    rainbowGrad.addColorStop(1, '#ff007f');
+
+    // Outer Glow & Glass Card Backing
+    ctx.fillStyle = 'rgba(10, 5, 18, 0.88)';
+    ctx.strokeStyle = rainbowGrad;
+    ctx.lineWidth = 14;
+    ctx.shadowColor = 'rgba(255, 42, 133, 0.7)';
+    ctx.shadowBlur = 35;
     
-    const r = 80;
+    const r = 70;
     ctx.beginPath();
-    ctx.moveTo(r, 20);
-    ctx.lineTo(canvas.width - r, 20);
-    ctx.quadraticCurveTo(canvas.width - 20, 20, canvas.width - 20, r);
-    ctx.lineTo(canvas.width - 20, canvas.height - r);
-    ctx.quadraticCurveTo(canvas.width - 20, canvas.height - 20, canvas.width - r, canvas.height - 20);
-    ctx.lineTo(r, canvas.height - 20);
-    ctx.quadraticCurveTo(20, canvas.height - 20, 20, canvas.height - r);
-    ctx.lineTo(20, r);
-    ctx.quadraticCurveTo(20, 20, r, 20);
-    ctx.closePath();
+    if (ctx.roundRect) {
+        ctx.roundRect(20, 20, canvas.width - 40, canvas.height - 40, r);
+    } else {
+        ctx.rect(20, 20, canvas.width - 40, canvas.height - 40);
+    }
     ctx.fill();
     ctx.stroke();
 
+    // Inner Holographic Bevel line
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.lineWidth = 3;
+    ctx.shadowBlur = 0;
+    ctx.beginPath();
+    if (ctx.roundRect) {
+        ctx.roundRect(32, 32, canvas.width - 64, canvas.height - 64, r - 10);
+    }
+    ctx.stroke();
+
+    // Text with glowing aura
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 84px "Plus Jakarta Sans", sans-serif';
+    ctx.font = 'bold 80px "Plus Jakarta Sans", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.shadowColor = bgColor;
-    ctx.shadowBlur = 30;
+    ctx.shadowBlur = 28;
     ctx.fillText(text, canvas.width / 2, canvas.height / 2);
 
     const texture = new THREE.CanvasTexture(canvas);
@@ -1050,7 +1212,7 @@ function createBadgeTexture(text, bgColor = "#ff2a85") {
     return texture;
 }
 
-// Create Canvas Frame Texture for Photos
+// Create Holographic Canvas Frame Texture for Photos
 function createPhotoTexture(imgSrc, callback) {
     const formattedUrl = formatImageUrl(imgSrc);
     const img = new Image();
@@ -1064,38 +1226,71 @@ function createPhotoTexture(imgSrc, callback) {
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-        ctx.shadowColor = 'rgba(255, 42, 133, 0.5)';
-        ctx.shadowBlur = 40;
+        // Prismatic Rainbow Holographic Border
+        const rainbow = ctx.createLinearGradient(0, 0, 1024, 1024);
+        rainbow.addColorStop(0, '#ff007f');
+        rainbow.addColorStop(0.2, '#ff9e00');
+        rainbow.addColorStop(0.4, '#ffee00');
+        rainbow.addColorStop(0.6, '#00f5d4');
+        rainbow.addColorStop(0.8, '#7b2cbf');
+        rainbow.addColorStop(1, '#ff007f');
+
+        // Outer Glow & Card Backing
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.98)';
+        ctx.strokeStyle = rainbow;
+        ctx.lineWidth = 16;
+        ctx.shadowColor = 'rgba(255, 42, 133, 0.65)';
+        ctx.shadowBlur = 35;
         
         ctx.beginPath();
         if (ctx.roundRect) {
-            ctx.roundRect(32, 32, 960, 960, 48);
+            ctx.roundRect(24, 24, 976, 976, 52);
         } else {
-            ctx.rect(32, 32, 960, 960);
+            ctx.rect(24, 24, 976, 976);
         }
         ctx.fill();
+        ctx.stroke();
 
+        // Image Clipping
         ctx.save();
         ctx.beginPath();
         if (ctx.roundRect) {
-            ctx.roundRect(64, 64, 896, 896, 36);
+            ctx.roundRect(58, 58, 908, 908, 38);
         } else {
-            ctx.rect(64, 64, 896, 896);
+            ctx.rect(58, 58, 908, 908);
         }
         ctx.clip();
-        ctx.drawImage(img, 64, 64, 896, 896);
+        ctx.drawImage(img, 58, 58, 908, 908);
         ctx.restore();
 
-        ctx.strokeStyle = 'rgba(255, 42, 133, 0.85)';
-        ctx.lineWidth = 8;
+        // Inner Holographic Accent Border
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.lineWidth = 4;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#ffffff';
         ctx.beginPath();
         if (ctx.roundRect) {
-            ctx.roundRect(32, 32, 960, 960, 48);
-        } else {
-            ctx.rect(32, 32, 960, 960);
+            ctx.roundRect(56, 56, 912, 912, 40);
         }
         ctx.stroke();
+
+        // 4 Corner Diamond Sparkles
+        function drawSparkle(cx, cy, size) {
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = '#00f5d4';
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - size);
+            ctx.quadraticCurveTo(cx, cy, cx + size, cy);
+            ctx.quadraticCurveTo(cx, cy, cx, cy + size);
+            ctx.quadraticCurveTo(cx, cy, cx - size, cy);
+            ctx.quadraticCurveTo(cx, cy, cx, cy - size);
+            ctx.fill();
+        }
+        drawSparkle(56, 56, 16);
+        drawSparkle(968, 56, 16);
+        drawSparkle(56, 968, 16);
+        drawSparkle(968, 968, 16);
 
         const texture = new THREE.CanvasTexture(canvas);
         texture.minFilter = THREE.LinearMipmapLinearFilter;
@@ -1143,6 +1338,8 @@ function addCustomPhoto(file) {
                 currentExpansion: 1.0
             };
 
+            attachHologramAura(mesh, 5.4, 5.4);
+
             mesh.scale.set(0.01, 0.01, 0.01);
             orbitGroup.add(mesh);
             photoMeshes.push(mesh);
@@ -1185,6 +1382,8 @@ function addCustomText(text) {
         currentExpansion: 1.0
     };
     
+    attachHologramAura(mesh, 7.0, 3.0);
+
     mesh.scale.set(0.01, 0.01, 0.01);
     orbitGroup.add(mesh);
     photoMeshes.push(mesh);
@@ -1423,7 +1622,15 @@ function animate() {
     }
 
     // Orbit Floating Photos & Badges
-    photoMeshes.forEach((mesh) => {
+    photoMeshes.forEach((mesh, mIdx) => {
+        // Dynamic Hologram Rainbow Aura Cycling & Breathing
+        if (mesh.userData.auraMesh) {
+            const hue = (time * 0.14 + (mesh.userData.angleOffset || mIdx) * 0.22) % 1.0;
+            mesh.userData.auraMesh.material.color.setHSL(hue, 0.95, 0.65);
+            const pulse = 1.0 + Math.sin(time * 3.2 + (mesh.userData.angleOffset || mIdx) * 2.0) * 0.08;
+            mesh.userData.auraMesh.scale.set(pulse, pulse, 1.0);
+        }
+
         // Auto catch-up for any mesh that finished loading after zoomAnimation
         if (!zoomAnimation.active) {
             if (mesh.userData.currentExpansion === undefined || mesh.userData.currentExpansion < 1.0) {
