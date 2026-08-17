@@ -213,23 +213,25 @@ function formatImageUrl(url) {
              .replace(/<a.*?href=["'](.*?)["'].*?>/gi, '$1')
              .trim();
 
+    // Google Drive direct high-res conversion (max clarity sz=w2560)
     if (url.includes('drive.google.com')) {
         const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
         if (fileIdMatch && fileIdMatch[1]) {
-            // Google Drive thumbnail service sz=w1000 loads 20x faster with sharp quality
-            return `https://drive.google.com/thumbnail?id=${fileIdMatch[1]}&sz=w1000`;
+            return `https://drive.google.com/thumbnail?id=${fileIdMatch[1]}&sz=w2560`;
         }
     }
 
-    if (url.includes('freeimage.host/i/')) {
-        const match = url.match(/freeimage\.host\/i\/([a-zA-Z0-9_-]+)/);
+    // FreeImage.host viewer conversion (e.g. https://freeimage.host/i/CiliYR1 -> https://iili.io/CiliYR1.jpg)
+    if (url.includes('freeimage.host/i/') || url.includes('freeimage.host/image/')) {
+        const match = url.match(/freeimage\.host\/(?:i|image)\/([a-zA-Z0-9_-]+)/);
         if (match && match[1]) {
             return `https://iili.io/${match[1]}.jpg`;
         }
     }
 
-    if (url.includes('iili.io') && url.includes('.th.')) {
-        url = url.replace('.th.', '.');
+    // Convert FreeImage / ImgBB / Postimg thumbnail / medium to FULL ORIGINAL RESOLUTION
+    if (url.includes('iili.io') || url.includes('ibb.co') || url.includes('postimg.cc')) {
+        url = url.replace(/\.(th|md|sm)\./gi, '.');
     }
 
     return url;
@@ -986,38 +988,44 @@ function createMeteoriteRings() {
 // Create Dynamic Canvas Textures for Love Badges
 function createBadgeTexture(text, bgColor = "#ff2a85") {
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 160;
+    canvas.width = 1024;
+    canvas.height = 320;
     const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
-    ctx.fillStyle = 'rgba(15, 8, 20, 0.82)';
+    ctx.fillStyle = 'rgba(15, 8, 20, 0.85)';
     ctx.strokeStyle = bgColor;
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 12;
     
-    const r = 40;
+    const r = 80;
     ctx.beginPath();
-    ctx.moveTo(r, 10);
-    ctx.lineTo(canvas.width - r, 10);
-    ctx.quadraticCurveTo(canvas.width - 10, 10, canvas.width - 10, r);
-    ctx.lineTo(canvas.width - 10, canvas.height - r);
-    ctx.quadraticCurveTo(canvas.width - 10, canvas.height - 10, canvas.width - r, canvas.height - 10);
-    ctx.lineTo(r, canvas.height - 10);
-    ctx.quadraticCurveTo(10, canvas.height - 10, 10, canvas.height - r);
-    ctx.lineTo(10, r);
-    ctx.quadraticCurveTo(10, 10, r, 10);
+    ctx.moveTo(r, 20);
+    ctx.lineTo(canvas.width - r, 20);
+    ctx.quadraticCurveTo(canvas.width - 20, 20, canvas.width - 20, r);
+    ctx.lineTo(canvas.width - 20, canvas.height - r);
+    ctx.quadraticCurveTo(canvas.width - 20, canvas.height - 20, canvas.width - r, canvas.height - 20);
+    ctx.lineTo(r, canvas.height - 20);
+    ctx.quadraticCurveTo(20, canvas.height - 20, 20, canvas.height - r);
+    ctx.lineTo(20, r);
+    ctx.quadraticCurveTo(20, 20, r, 20);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 42px "Plus Jakarta Sans", sans-serif';
+    ctx.font = 'bold 84px "Plus Jakarta Sans", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.shadowColor = bgColor;
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 30;
     ctx.fillText(text, canvas.width / 2, canvas.height / 2);
 
-    return new THREE.CanvasTexture(canvas);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = true;
+    return texture;
 }
 
 // Create Canvas Frame Texture for Photos
@@ -1028,44 +1036,49 @@ function createPhotoTexture(imgSrc, callback) {
     img.src = formattedUrl;
     img.onload = () => {
         const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
+        canvas.width = 1024;
+        canvas.height = 1024;
         const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
         ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
         ctx.shadowColor = 'rgba(255, 42, 133, 0.5)';
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 40;
         
         ctx.beginPath();
         if (ctx.roundRect) {
-            ctx.roundRect(16, 16, 480, 480, 24);
+            ctx.roundRect(32, 32, 960, 960, 48);
         } else {
-            ctx.rect(16, 16, 480, 480);
+            ctx.rect(32, 32, 960, 960);
         }
         ctx.fill();
 
         ctx.save();
         ctx.beginPath();
         if (ctx.roundRect) {
-            ctx.roundRect(32, 32, 448, 448, 18);
+            ctx.roundRect(64, 64, 896, 896, 36);
         } else {
-            ctx.rect(32, 32, 448, 448);
+            ctx.rect(64, 64, 896, 896);
         }
         ctx.clip();
-        ctx.drawImage(img, 32, 32, 448, 448);
+        ctx.drawImage(img, 64, 64, 896, 896);
         ctx.restore();
 
-        ctx.strokeStyle = 'rgba(255, 42, 133, 0.8)';
-        ctx.lineWidth = 4;
+        ctx.strokeStyle = 'rgba(255, 42, 133, 0.85)';
+        ctx.lineWidth = 8;
         ctx.beginPath();
         if (ctx.roundRect) {
-            ctx.roundRect(16, 16, 480, 480, 24);
+            ctx.roundRect(32, 32, 960, 960, 48);
         } else {
-            ctx.rect(16, 16, 480, 480);
+            ctx.rect(32, 32, 960, 960);
         }
         ctx.stroke();
 
         const texture = new THREE.CanvasTexture(canvas);
+        texture.minFilter = THREE.LinearMipmapLinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.generateMipmaps = true;
         callback(texture);
     };
     img.onerror = () => {
@@ -1451,13 +1464,13 @@ function initEvents() {
                 if (photoWrapper) photoWrapper.style.display = 'block';
                 if (badgeCard) badgeCard.style.display = 'none';
                 if (modalImg) modalImg.src = hit.userData.src;
-                if (modalTitle) modalTitle.innerText = hit.userData.caption || "Kỷ Niệm Tình Yêu 💖";
+                if (modalTitle) modalTitle.style.display = 'none';
                 if (photoModal) photoModal.classList.add('open');
             } else if (hit.userData.isBadge) {
                 if (photoWrapper) photoWrapper.style.display = 'none';
                 if (badgeCard) badgeCard.style.display = 'flex';
                 if (modalBadgeText) modalBadgeText.innerText = `"${hit.userData.text}"`;
-                if (modalTitle) modalTitle.innerText = "Thông Điệp Vũ Trụ ✨";
+                if (modalTitle) modalTitle.style.display = 'none';
                 if (photoModal) photoModal.classList.add('open');
             }
         } else {

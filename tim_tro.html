@@ -1352,22 +1352,25 @@
                      .replace(/<a.*?href=["'](.*?)["'].*?>/gi, '$1')
                      .trim();
 
+            // Google Drive direct high-res conversion (max clarity sz=w2560)
             if (url.includes('drive.google.com')) {
                 const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
                 if (match && match[1]) {
-                    return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
+                    return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w2560`;
                 }
             }
 
-            if (url.includes('freeimage.host/i/')) {
-                const match = url.match(/freeimage\.host\/i\/([a-zA-Z0-9_-]+)/);
+            // FreeImage.host viewer conversion (e.g. https://freeimage.host/i/CiliYR1 -> https://iili.io/CiliYR1.jpg)
+            if (url.includes('freeimage.host/i/') || url.includes('freeimage.host/image/')) {
+                const match = url.match(/freeimage\.host\/(?:i|image)\/([a-zA-Z0-9_-]+)/);
                 if (match && match[1]) {
                     return `https://iili.io/${match[1]}.jpg`;
                 }
             }
 
-            if (url.includes('iili.io') && url.includes('.th.')) {
-                url = url.replace('.th.', '.');
+            // Convert FreeImage / ImgBB / Postimg thumbnail / medium to FULL ORIGINAL RESOLUTION
+            if (url.includes('iili.io') || url.includes('ibb.co') || url.includes('postimg.cc')) {
+                url = url.replace(/\.(th|md|sm)\./gi, '.');
             }
 
             return url;
