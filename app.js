@@ -593,21 +593,31 @@ function updateOrbitWithSheetData(photos, badges) {
         const src = typeof item === 'string' ? item : item.src;
         const caption = typeof item === 'object' && item.caption ? item.caption : "Kỷ Niệm Tình Yêu 💖";
 
+        // Calculate well-spaced orbit angles & positions around 360 degrees
+        const angleOffset = (idx / totalItems) * Math.PI * 2;
+        const radiusOffset = 18 + (idx % 3) * 5 + (Math.random() - 0.5) * 3;
+        const yOffset = ((idx % 2 === 0 ? 1 : -1) * (2.5 + (idx % 4) * 2.2)) + (Math.random() - 0.5) * 2;
+        const speedFactor = 0.85 + ((idx % 3) * 0.15);
+
         createPhotoTexture(src, (texture) => {
             const geometry = new THREE.PlaneGeometry(3.6, 3.6);
             const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide });
             const mesh = new THREE.Mesh(geometry, material);
+            
+            const isZooming = zoomAnimation.active;
             mesh.userData = { 
                 isPhoto: true, 
                 src: src, 
                 caption: caption,
-                angleOffset: (idx / totalItems) * Math.PI * 2 + Math.random() * 0.3, 
-                radiusOffset: 16 + Math.random() * 22, 
-                yOffset: (Math.random() - 0.5) * 14,
-                speedFactor: 0.8 + Math.random() * 0.5,
-                currentExpansion: 0.05
+                angleOffset: angleOffset, 
+                radiusOffset: radiusOffset, 
+                yOffset: yOffset,
+                speedFactor: speedFactor,
+                currentExpansion: isZooming ? 0.05 : 1.0
             };
-            mesh.scale.set(0.01, 0.01, 0.01);
+            
+            const initScale = isZooming ? 0.01 : CONFIG.photoSize;
+            mesh.scale.set(initScale, initScale, initScale);
             orbitGroup.add(mesh);
             photoMeshes.push(mesh);
         });
@@ -616,22 +626,30 @@ function updateOrbitWithSheetData(photos, badges) {
     badges.forEach((badge, idx) => {
         const text = typeof badge === 'string' ? badge : badge.text;
         const color = typeof badge === 'object' && badge.color ? badge.color : "#ff2a85";
+        const totalIdx = photos.length + idx;
+
+        const angleOffset = (totalIdx / totalItems) * Math.PI * 2;
+        const radiusOffset = 17 + (idx % 3) * 5 + (Math.random() - 0.5) * 3;
+        const yOffset = ((idx % 2 === 0 ? -1 : 1) * (2.5 + (idx % 4) * 2.2)) + (Math.random() - 0.5) * 2;
+        const speedFactor = 0.85 + ((idx % 3) * 0.15);
 
         const texture = createBadgeTexture(text, color);
         const geometry = new THREE.PlaneGeometry(5.2, 1.6);
         const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide });
         const mesh = new THREE.Mesh(geometry, material);
-        const totalIdx = photos.length + idx;
+        
+        const isZooming = zoomAnimation.active;
         mesh.userData = { 
             isBadge: true, 
             text: text, 
-            angleOffset: (totalIdx / totalItems) * Math.PI * 2 + Math.random() * 0.3, 
-            radiusOffset: 15 + Math.random() * 21, 
-            yOffset: (Math.random() - 0.5) * 14,
-            speedFactor: 0.8 + Math.random() * 0.5,
-            currentExpansion: 0.05
+            angleOffset: angleOffset, 
+            radiusOffset: radiusOffset, 
+            yOffset: yOffset,
+            speedFactor: speedFactor,
+            currentExpansion: isZooming ? 0.05 : 1.0
         };
-        mesh.scale.set(0.01, 0.01, 0.01);
+        const initScale = isZooming ? 0.01 : 1.0;
+        mesh.scale.set(initScale, initScale, initScale);
         orbitGroup.add(mesh);
         photoMeshes.push(mesh);
     });
@@ -1373,6 +1391,11 @@ function animate() {
 
         if (progress >= 1.0) {
             zoomAnimation.active = false;
+            photoMeshes.forEach(mesh => {
+                mesh.userData.currentExpansion = 1.0;
+                const targetScale = mesh.userData.isBadge ? 1.0 : CONFIG.photoSize;
+                mesh.scale.set(targetScale, targetScale, targetScale);
+            });
             controls.target.set(0, 0, 0);
             controls.update();
         }
@@ -1401,6 +1424,18 @@ function animate() {
 
     // Orbit Floating Photos & Badges
     photoMeshes.forEach((mesh) => {
+        // Auto catch-up for any mesh that finished loading after zoomAnimation
+        if (!zoomAnimation.active) {
+            if (mesh.userData.currentExpansion === undefined || mesh.userData.currentExpansion < 1.0) {
+                mesh.userData.currentExpansion = THREE.MathUtils.lerp(mesh.userData.currentExpansion || 0.05, 1.0, Math.min(1.0, delta * 3.5));
+                if (mesh.userData.currentExpansion > 0.99) mesh.userData.currentExpansion = 1.0;
+                
+                const targetScale = mesh.userData.isBadge ? 1.0 : CONFIG.photoSize;
+                const curScale = THREE.MathUtils.lerp(mesh.scale.x, targetScale, Math.min(1.0, delta * 4.0));
+                mesh.scale.set(curScale, curScale, curScale);
+            }
+        }
+
         const speed = (mesh.userData.speedFactor || 1.0) * CONFIG.orbitSpeed;
         const angle = mesh.userData.angleOffset + time * 0.15 * speed;
         const expansion = mesh.userData.currentExpansion !== undefined ? mesh.userData.currentExpansion : 1.0;
@@ -1412,7 +1447,7 @@ function animate() {
 
         mesh.lookAt(camera.position);
 
-        if (!zoomAnimation.active) {
+        if (!zoomAnimation.active && mesh.userData.currentExpansion >= 0.99) {
             const baseScale = mesh.userData.isBadge ? 1.0 : CONFIG.photoSize;
             mesh.scale.set(baseScale, baseScale, baseScale);
         }
