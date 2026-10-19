@@ -51,6 +51,16 @@
   @keyframes floatY { 50% { transform: translateY(-22px) } }
   .sparkle { position: absolute; color: #fff; text-shadow: 0 0 8px #fff; animation: twinkle 2s infinite; }
   @keyframes twinkle { 50% { opacity: .2; transform: scale(.6) } }
+  .petal { position: absolute; top: -40px; z-index: 2; pointer-events: none; width: 14px; height: 18px; border-radius: 150% 0 150% 0;
+           background: linear-gradient(135deg, #fff0f5, #ff9ab8 60%, #ff6f98); opacity: .9; box-shadow: 0 2px 4px rgba(255,80,130,.25);
+           animation: petalFall linear infinite; }
+  @keyframes petalFall {
+    0%   { transform: translate(0, 0) rotate(0deg) rotateY(0deg); }
+    25%  { transform: translate(40px, 27vh) rotate(90deg) rotateY(180deg); }
+    50%  { transform: translate(-20px, 55vh) rotate(180deg) rotateY(360deg); }
+    75%  { transform: translate(35px, 82vh) rotate(270deg) rotateY(540deg); }
+    100% { transform: translate(0, 112vh) rotate(360deg) rotateY(720deg); }
+  }
   .clouds { position: absolute; bottom: -40px; left: -5%; width: 110%; height: 150px; }
   .clouds i { position: absolute; bottom: 0; background: #fff; border-radius: 50%; filter: blur(2px); opacity: .95; }
   #title { position: relative; z-index: 3; text-align: center; padding: 0 16px; }
@@ -122,6 +132,9 @@
   @keyframes spin { from { transform: rotateX(-8deg) rotateY(0) } to { transform: rotateX(-8deg) rotateY(360deg) } }
   #bigText { position: absolute; top: 8%; width: 100%; text-align: center; z-index: 3; font: 700 clamp(30px, 6vw, 60px) 'Dancing Script';
              color: #ffd6ea; text-shadow: 0 0 8px #ff4f9a, 0 0 20px #ff1f7a, 0 0 40px #ff1f7a; transition: opacity 1s; }
+  #lyric { position: absolute; left: 0; right: 0; bottom: calc(6% + 140px); z-index: 3; padding: 0 16px; text-align: center;
+           font: 700 clamp(17px, 3.6vw, 26px) 'Quicksand'; color: #ffe3f0; opacity: 0; transition: opacity .5s;
+           text-shadow: 0 0 6px #ff4f9a, 0 0 16px #ff1f7a; }
   #musicBtn { position: fixed; top: 12px; right: 12px; z-index: 50; width: 40px; height: 40px; border-radius: 50%; border: none;
               background: rgba(255,255,255,.75); font-size: 18px; cursor: pointer; display: none; }
 </style>
@@ -179,6 +192,7 @@
 <section id="final" class="scene">
   <canvas id="space"></canvas>
   <div id="bigText"></div>
+  <div id="lyric"></div>
   <div class="ring-wrap"><div class="ring" id="ring"></div></div>
 </section>
 
@@ -198,6 +212,8 @@ const CONFIG = {
     "Gửi em, cô gái anh thương nhất 💕",
     "Nhân ngày 20/10, anh chúc em luôn xinh đẹp, vui vẻ và hạnh phúc.",
     "Mong rằng nụ cười sẽ luôn nở trên môi em.",
+    "Em nhớ uống thuốc đầy đủ, nghỉ ngơi nhiều để mau khỏe lại nha, anh xót lắm đó 🥺",
+    "Chúc em nhanh khỏi bệnh, để còn cùng anh đi chơi thật nhiều nơi nữa 💪",
     "Yêu em nhiều lắm! 🥰"
   ],
   sign: "Người yêu em ♡",
@@ -206,6 +222,12 @@ const CONFIG = {
   // Dán link YouTube của bài hát vào đây (để trống "" thì dùng file music.mp3 ở trên)
   youtube: "https://www.youtube.com/shorts/dPkRwXX3oKU",
   youtubeStart: 0,   // bắt đầu phát từ giây thứ mấy
+  // Lời bài hát hiện ở cảnh cuối, chạy theo nhạc: [giây trong video, "câu hát"]
+  // Mở video, xem câu nào bắt đầu ở giây thứ mấy rồi điền vào. Để trống [] thì không hiện.
+  // Ví dụ: [3.5, "Câu hát thứ nhất"], [7.2, "Câu hát thứ hai"],
+  lyrics: [
+  ],
+  particleName: "Thùy Linh",   // chữ mà các hạt gom lại ở cảnh cuối
   floatTexts: [
   "Bé cưng 20/10 vui vẻ 🌷",
   "Hôm nay em là nhất trần đời 👑",
@@ -222,11 +244,14 @@ const CONFIG = {
   "My princess 👑",
   "Hạnh phúc nhé 🌸",
   "Thương em 🥰",
-  "Only you 💫"
+  "Only you 💫",
+  "Mau khỏe nha em 🍀",
+  "Hết ốm nhanh nhé 💪"
 ],
   bigTexts: [
   "Chúc em 20/10 thật hạnh phúc 🌹",
   "Cảm ơn Công chúa ✨",
+  "Mau khỏi bệnh nha em 💊💖",
   "Yêu em nhiều 💕",
   "Mãi là công chúa của anh nhé 👑"
 ]
@@ -259,7 +284,8 @@ const music = {
   toggle() {
     if (ytId) { if (!ytReady) return; ytPlaying ? yt.pauseVideo() : yt.playVideo(); return; }
     bgm.paused ? bgm.play() : bgm.pause();
-  }
+  },
+  time() { return ytId ? (ytReady ? yt.getCurrentTime() : 0) : bgm.currentTime; }
 };
 if (ytId) {
   const box = document.createElement('div');
@@ -408,6 +434,15 @@ function buildDeco() {
       fontSize: 10 + Math.random() * 18 + 'px', animationDelay: -Math.random() * 2 + 's' });
     deco.appendChild(s);
   }
+  // Cánh hoa rơi
+  for (let i = 0; i < 24; i++) {
+    const p = document.createElement('div');
+    p.className = 'petal';
+    const s = .6 + Math.random() * .8, dur = 7 + Math.random() * 6;
+    Object.assign(p.style, { left: Math.random() * 100 + '%', width: 14 * s + 'px', height: 18 * s + 'px',
+      animationDuration: dur + 's', animationDelay: -Math.random() * dur + 's' });
+    deco.appendChild(p);
+  }
   const clouds = $('clouds');
   for (let i = 0; i < 14; i++) {
     const c = document.createElement('i');
@@ -550,7 +585,44 @@ function startFinal() {
     const x = 16 * Math.pow(Math.sin(t), 3) * k + (Math.random() - .5) * 1.2;
     const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * k;
     const z = (Math.random() - .5) * 10 * Math.sqrt(1 - k * k + 0.05);
-    heart.push({ x, y, z, hue: 320 + Math.random() * 30, l: 55 + Math.random() * 30 });
+    // hx/hy/hz: vị trí trên trái tim; x/y/z: vị trí hiện tại (bắt đầu rải rác khắp nơi)
+    heart.push({ hx: x, hy: y, hz: z, x: (Math.random() - .5) * 80, y: (Math.random() - .5) * 60, z: (Math.random() - .5) * 40,
+                 hue: 320 + Math.random() * 30, l: 55 + Math.random() * 30 });
+  }
+  // Điểm của chữ tên: vẽ chữ lên canvas ẩn rồi lấy các điểm có màu
+  let named = false, toHeart = false, nameAt = 0;
+  const nameFont = "700 160px 'Dancing Script', cursive";
+  document.fonts.load(nameFont, CONFIG.particleName).catch(() => {}).then(() => {
+    const c = document.createElement('canvas'), g = c.getContext('2d');
+    c.width = 1000; c.height = 260;
+    g.font = nameFont; g.textAlign = 'center'; g.textBaseline = 'middle';
+    const tw = Math.max(1, g.measureText(CONFIG.particleName).width);
+    g.fillText(CONFIG.particleName, 500, 130);
+    const d = g.getImageData(0, 0, c.width, c.height).data, pts = [];
+    for (let y = 0; y < c.height; y += 3) for (let x = 0; x < c.width; x += 3)
+      if (d[(y * c.width + x) * 4 + 3] > 128) pts.push([x - 500, y - 130]);
+    if (!pts.length) { toHeart = true; return; }
+    const k = Math.min(44 / tw, 0.075);   // chữ vừa khung, không rộng hơn ~44 đơn vị
+    for (const p of heart) {
+      const [px, py] = pts[Math.random() * pts.length | 0];
+      p.nx = px * k + (Math.random() - .5) * .3; p.ny = py * k - 2 + (Math.random() - .5) * .3; p.nz = (Math.random() - .5) * 1.5;
+    }
+    named = true; nameAt = performance.now();
+  });
+  if (!CONFIG.particleName) toHeart = true;
+
+  // Lời bài hát
+  const lyricEl = $('lyric'), lyrics = [...CONFIG.lyrics].sort((a, b) => a[0] - b[0]);
+  let lyricIdx = -1;
+  function updateLyric() {
+    if (!lyrics.length) return;
+    const t = music.time();
+    let i = -1;
+    while (i + 1 < lyrics.length && lyrics[i + 1][0] <= t) i++;
+    if (i === lyricIdx) return;
+    lyricIdx = i;
+    lyricEl.style.opacity = 0;
+    setTimeout(() => { lyricEl.textContent = i >= 0 ? lyrics[i][1] : ''; lyricEl.style.opacity = i >= 0 ? 1 : 0; }, 300);
   }
   // Sao nền
   const stars = Array.from({ length: 220 }, () => ({ x: Math.random(), y: Math.random(), r: Math.random() * 1.4, p: Math.random() * 6 }));
@@ -563,7 +635,14 @@ function startFinal() {
 
   let rot = 0, time = 0;
   (function loop() {
-    time += 0.016; rot += 0.008;
+    time += 0.016;
+    // Giữ chữ tên ~6 giây (tính từ lúc bắt đầu gom) rồi cho hạt tan ra, bay về thành trái tim
+    if (!toHeart && named && performance.now() - nameAt > 6000) {
+      toHeart = true;
+      for (const p of heart) { p.x += (Math.random() - .5) * 14; p.y += (Math.random() - .5) * 14; p.z += (Math.random() - .5) * 14; }
+    }
+    if (toHeart) rot += 0.008;
+    updateLyric();
     ctx.fillStyle = 'rgba(0,0,0,.35)';
     ctx.fillRect(0, 0, W, H);
 
@@ -573,10 +652,12 @@ function startFinal() {
     }
 
     // Nhịp đập trái tim
-    const beat = 1 + 0.08 * Math.pow(Math.max(0, Math.sin(time * 4.5)), 6) + 0.04 * Math.sin(time * 9) ** 8;
+    const beat = !toHeart ? 1 : 1 + 0.08 * Math.pow(Math.max(0, Math.sin(time * 4.5)), 6) + 0.04 * Math.sin(time * 9) ** 8;
     const cx = W / 2, cy = H * 0.44, cos = Math.cos(rot), sin = Math.sin(rot);
     ctx.globalCompositeOperation = 'lighter';
     for (const p of heart) {
+      if (toHeart) { p.x += (p.hx - p.x) * .035; p.y += (p.hy - p.y) * .035; p.z += (p.hz - p.z) * .035; }
+      else if (named) { p.x += (p.nx - p.x) * .05; p.y += (p.ny - p.y) * .05; p.z += (p.nz - p.z) * .05; }
       const x = p.x * cos - p.z * sin, z = p.x * sin + p.z * cos;
       const f = 60 / (60 + z);
       const sx = cx + x * scale * beat * f, sy = cy + p.y * scale * beat * f;
