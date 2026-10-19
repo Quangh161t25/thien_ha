@@ -203,6 +203,9 @@ const CONFIG = {
   sign: "Người yêu em ♡",
   photos: ["anh1.jpg", "anh2.jpg", "anh3.jpg", "anh4.jpg", "anh5.jpg", "anh6.jpg"],
   music: "music.mp3",
+  // Dán link YouTube của bài hát vào đây (để trống "" thì dùng file music.mp3 ở trên)
+  youtube: "https://www.youtube.com/shorts/dPkRwXX3oKU",
+  youtubeStart: 0,   // bắt đầu phát từ giây thứ mấy
   floatTexts: [
   "Bé cưng 20/10 vui vẻ 🌷",
   "Hôm nay em là nhất trần đời 👑",
@@ -241,12 +244,47 @@ function makePhoto(src, emoji = '💖') {
   return img;
 }
 
-// Nhạc
+// Nhạc: ưu tiên YouTube nếu có link, không thì dùng file mp3
 const bgm = $('bgm');
-bgm.src = CONFIG.music;
-$('musicBtn').onclick = () => { bgm.paused ? bgm.play() : bgm.pause(); };
-bgm.onplay = () => $('musicBtn').textContent = '🎵';
-bgm.onpause = () => $('musicBtn').textContent = '🔇';
+const setIcon = on => $('musicBtn').textContent = on ? '🎵' : '🔇';
+const ytId = (CONFIG.youtube.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([\w-]{11})/) || [])[1]
+          || (/^[\w-]{11}$/.test(CONFIG.youtube.trim()) ? CONFIG.youtube.trim() : '');
+let yt = null, ytReady = false, ytWant = false, ytPlaying = false;
+const music = {
+  play() {
+    const show = () => $('musicBtn').style.display = 'block';
+    if (ytId) { show(); ytWant = true; if (ytReady) yt.playVideo(); return; }
+    bgm.play().then(show).catch(() => {});
+  },
+  toggle() {
+    if (ytId) { if (!ytReady) return; ytPlaying ? yt.pauseVideo() : yt.playVideo(); return; }
+    bgm.paused ? bgm.play() : bgm.pause();
+  }
+};
+if (ytId) {
+  const box = document.createElement('div');
+  box.id = 'yt';
+  box.style.cssText = 'position:fixed;left:-9999px;top:0;width:200px;height:200px;opacity:0;pointer-events:none';
+  document.body.appendChild(box);
+  window.onYouTubeIframeAPIReady = () => {
+    yt = new YT.Player('yt', {
+      videoId: ytId,
+      playerVars: { autoplay: 0, controls: 0, loop: 1, playlist: ytId, start: CONFIG.youtubeStart | 0, playsinline: 1 },
+      events: {
+        onReady: () => { ytReady = true; yt.setVolume(100); if (ytWant) yt.playVideo(); },
+        onStateChange: e => { ytPlaying = e.data === YT.PlayerState.PLAYING; if (e.data !== YT.PlayerState.BUFFERING) setIcon(ytPlaying); }
+      }
+    });
+  };
+  const s = document.createElement('script');
+  s.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(s);
+} else {
+  bgm.src = CONFIG.music;
+}
+$('musicBtn').onclick = () => music.toggle();
+bgm.onplay = () => setIcon(true);
+bgm.onpause = () => setIcon(false);
 
 
 /* ---------------- BÓ HOA SVG (ghép từng phần) ---------------- */
@@ -347,7 +385,7 @@ buildBouquet();
 
 /* ---------------- CẢNH 1 → 2 ---------------- */
 $('openGift').onclick = () => {
-  bgm.play().then(() => $('musicBtn').style.display = 'block').catch(() => {});
+  music.play();
   go('card');
   buildDeco();
   startCard();
